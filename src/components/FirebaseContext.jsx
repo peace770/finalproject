@@ -21,6 +21,8 @@ import {
   updateDoc,
   doc,
   serverTimestamp,
+  getDocs,
+  where,
 } from "firebase/firestore";
 import {
   getStorage,
@@ -34,7 +36,31 @@ import { getPerformance } from "firebase/performance";
 export const LoginContext = createContext();
 
 const firebaseAppConfig = getFirebaseConfig();
-initializeApp(firebaseAppConfig);
+const app = initializeApp(firebaseAppConfig);
+
+const db = getFirestore(app);
+
+export async function getAllCourses() {
+  // return object with all the courses
+  const q = query(collection(db, "courses"));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot;
+}
+export async function getCourse(courseId){
+  //return all the chapters
+  const q = query(collection(db, "courses", courseId, 'chapters'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot;
+}
+
+export async function getChapter(courseId, chapterID){
+  // return all components of a chapter
+  console.log('get chapter');
+  const q = query(collection(db, "courses", courseId, 'chapters', chapterID, 'components'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot;
+}
+
 
 // Signs-in with google.
 export async function signInWithGoogle() {
@@ -44,9 +70,9 @@ export async function signInWithGoogle() {
 }
 
 export async function signInWithPassword(email, password) {
-    // Sign in Firebase using email and password.
-    await signInWithEmailAndPassword(getAuth(), email, password);
-  }
+  // Sign in Firebase using email and password.
+  await signInWithEmailAndPassword(getAuth(), email, password);
+}
 
 // Signs-out .
 export function signOutUser() {
@@ -72,8 +98,8 @@ export function getUserName() {
 
 export default function FirebaseContext({ children }) {
   const [LoginState, setLoginState] = useState(getAuth().currentUser);
-  useEffect(()=> console.log(LoginState), [LoginState]);
-console.log(getAuth());
+  useEffect(() => console.log(LoginState), [LoginState]);
+  console.log(getAuth());
   onAuthStateChanged(getAuth(), (user) => setLoginState(!!user));
 
   return (
