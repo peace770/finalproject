@@ -1,5 +1,6 @@
+import { getAuth } from "firebase/auth";
 import React, { useEffect, useState } from "react";
-import { getAllCourses, getChapter, getCourse } from "./FirebaseContext";
+import { getAllCourses, getChapter, getCourse, getCoursesByUserId } from "./FirebaseContext";
 
 export default function Tests() {
   const [coursesList, setCoursesList] = useState([]);
@@ -10,7 +11,7 @@ export default function Tests() {
   const [componentID, setComponentID] = useState('');
 
   useEffect(() => {
-    getAllCourses().then((data) => setCoursesList(objToArray(data)));
+    getCoursesByUserId('system').then((data) => setCoursesList(objToArray(data)));
   }, []);
   useEffect(() => {
         if (!courseID) return;
@@ -24,7 +25,6 @@ export default function Tests() {
     setComponentID('');
     getChapter(courseID, chapterID).then((data) => setComponents(objToArray(data)));
 }, [chapterID])
-console.log(components);
   return (
     <div style={{padding:'3rem'}}>
       <h1>test</h1>

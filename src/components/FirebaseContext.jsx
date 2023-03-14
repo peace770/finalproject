@@ -43,22 +43,32 @@ const db = getFirestore(app);
 export async function getAllCourses() {
   // return object with all the courses
   const q = query(collection(db, "courses"));
-  const querySnapshot = await getDocs(q);
-  return querySnapshot;
+  return getDocs(q);
+}
+export async function getCoursesByUserId(userId) {
+  // return object with all the courses
+  const q = query(collection(db, "courses"), where('creator', '==', userId));
+  return getDocs(q);
 }
 export async function getCourse(courseId){
   //return all the chapters
   const q = query(collection(db, "courses", courseId, 'chapters'));
-  const querySnapshot = await getDocs(q);
-  return querySnapshot;
+  return getDocs(q);
 }
 
 export async function getChapter(courseId, chapterID){
   // return all components of a chapter
-  console.log('get chapter');
   const q = query(collection(db, "courses", courseId, 'chapters', chapterID, 'components'));
-  const querySnapshot = await getDocs(q);
-  return querySnapshot;
+  return getDocs(q);
+}
+
+export async function createNewCourse(courseName) {
+  if (!getAuth().currentUser) throw new Error("ou cant do this!")
+  return addDoc(collection(db, "courses"), {
+    name: courseName,
+    creator: getAuth().currentUser.uid, 
+  });
+  // add update to the user info
 }
 
 
@@ -96,11 +106,10 @@ export function getUserName() {
   else return "Profile";
 }
 
+
 export default function FirebaseContext({ children }) {
   const [LoginState, setLoginState] = useState(getAuth().currentUser);
-  useEffect(() => console.log(LoginState), [LoginState]);
-  console.log(getAuth());
-  onAuthStateChanged(getAuth(), (user) => setLoginState(!!user));
+  onAuthStateChanged(getAuth(), (user) => setLoginState(user));
 
   return (
     <LoginContext.Provider value={LoginState}>{children}</LoginContext.Provider>
