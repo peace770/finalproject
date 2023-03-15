@@ -63,12 +63,45 @@ export async function getChapter(courseId, chapterID){
 }
 
 export async function createNewCourse(courseName) {
-  if (!getAuth().currentUser) throw new Error("ou cant do this!")
+  if (!getAuth().currentUser) throw new Error("you cant do this!")
   return addDoc(collection(db, "courses"), {
     name: courseName,
     creator: getAuth().currentUser.uid, 
   });
-  // add update to the user info
+}
+
+export async function createNewChapter(courseId, chapterName, position) {
+  if (!getAuth().currentUser) throw new Error("you cant do this!")
+  return addDoc(collection(db, "courses", courseId, 'chapters'), {
+    name: chapterName,
+    position:position, 
+  });
+}
+
+export async function createNewComponent(courseId, chapterId, componentName, type, position) {
+  if (!getAuth().currentUser) throw new Error("you cant do this!")
+  return addDoc(collection(db, "courses", courseId, 'chapters', chapterId, 'components'), {
+    name: componentName,
+    type: type,
+    position:position, 
+  });
+}
+export async function updateComponentUrl(courseId, chapterId, componentId, newURL) {
+  if (!getAuth().currentUser) throw new Error("you cant do this!")
+  let componentRef = doc(db, "courses", courseId, 'chapters', chapterId, 'components', componentId);
+  return updateDoc(componentRef, {
+    url: newURL, 
+  });
+}
+
+export function updateListOrder(collectionPathArray, docs) {
+  if (!getAuth().currentUser) throw new Error("you cant do this!")
+  docs.forEach((d) => {
+    let docRef = doc(db, ...collectionPathArray, d.id)
+    updateDoc(docRef, {
+    position:d.position, 
+    })
+  })
 }
 
 

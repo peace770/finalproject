@@ -11,19 +11,19 @@ export default function Tests() {
   const [componentID, setComponentID] = useState('');
 
   useEffect(() => {
-    getCoursesByUserId('system').then((data) => setCoursesList(objToArray(data)));
+    getCoursesByUserId('system').then((data) => setCoursesList(data.docs));
   }, []);
   useEffect(() => {
         if (!courseID) return;
         setChapters([]);
-        getCourse(courseID).then((data) => setChapters(objToArray(data)));
+        getCourse(courseID).then((data) => setChapters(data.docs));
   }, [courseID])
   
   useEffect(() => {
     if (!chapterID) return;
     setComponents([]);
     setComponentID('');
-    getChapter(courseID, chapterID).then((data) => setComponents(objToArray(data)));
+    getChapter(courseID, chapterID).then((data) => setComponents(data.docs));
 }, [chapterID])
   return (
     <div style={{padding:'3rem'}}>
