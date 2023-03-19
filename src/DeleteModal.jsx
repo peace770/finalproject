@@ -31,7 +31,7 @@ export default function DeleteModal(props) {
   }
   
   function handleButtonClick(value) {
-    props.onButtonClick(value);
+    props.onButtonClick(props.index, value);
     handleClose();
   }
 
