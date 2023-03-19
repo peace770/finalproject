@@ -34,8 +34,7 @@ import {
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import { getPerformance } from "firebase/performance";
 
-const urlRegex =
-  /^(?:(?:https?|ftp):\/\/)?(?:\S+(?::\S*)?@)?(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|(?:[a-z0-9-]+\.)+[a-z]{2,})(?::\d{2,5})?(?:\/\S*)?$/i;
+const urlRegex = /^(?:(?:https?|ftp):\/\/)?(?:\S+(?::\S*)?@)?(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|(?:[a-z0-9-]+\.)+[a-z]{2,})(?::\d{2,5})?(?:\/\S*)?$/i;
 
 export const LoginContext = createContext();
 
@@ -44,63 +43,18 @@ const app = initializeApp(firebaseAppConfig);
 
 const db = getFirestore(app);
 
-export async function getAllCourses() {
-  // return object with all the courses
-  const q = query(collection(db, "courses"));
-  return getDocs(q);
-}
-export async function getCoursesByUserId(userId) {
-  // return object with all the courses
-  const q = query(collection(db, "courses"), where("creator", "==", userId));
-  return getDocs(q);
-}
-export async function getCourse(courseId) {
-  //return all the chapters
-  const q = query(collection(db, "courses", courseId, "chapters"));
-  return getDocs(q);
-}
-
-export async function getChapter(courseId, chapterID) {
-  // return all components of a chapter
-  const q = query(
-    collection(db, "courses", courseId, "chapters", chapterID, "components")
-  );
-  return getDocs(q);
-}
 
 export async function createNewCourse(courseName) {
   if (!getAuth().currentUser) throw new Error("you cant do this!");
-  return addDoc(collection(db, "courses"), {
+  let doc = await addDoc(collection(db, "courses"), {
     name: courseName,
     creator: getAuth().currentUser.uid,
   });
+  return new Course(getAuth().currentUser.uid, courseName, doc.id);
 }
 
-export async function createNewChapter(courseId, chapterName, position) {
-  if (!getAuth().currentUser) throw new Error("you cant do this!");
-  return addDoc(collection(db, "courses", courseId, "chapters"), {
-    name: chapterName,
-    position: position,
-  });
-}
 
-export async function createNewComponent(
-  courseId,
-  chapterId,
-  componentName,
-  type,
-  position
-) {
-  if (!getAuth().currentUser) throw new Error("you cant do this!");
-  return addDoc(
-    collection(db, "courses", courseId, "chapters", chapterId, "components"),
-    {
-      name: componentName,
-      type: type,
-      position: position,
-    }
-  );
-}
+
 
 async function updateComponentData(courseID, chapterID, componentID, data) {
   if (!getAuth().currentUser) throw new Error("you cant do this!");
@@ -122,11 +76,7 @@ async function updateChapterData(courseID, chapterID, data) {
   return updateDoc(docRef, data);
 }
 
-async function updateCourseData(courseID, data) {
-  if (!getAuth().currentUser) throw new Error("you cant do this!");
-  let docRef = doc(db, "courses", courseID);
-  return updateDoc(docRef, data);
-}
+
 
 export function updateCourse(course) {
   //TODO: update arr to real names
@@ -164,7 +114,17 @@ export function updateCourse(course) {
 
 export async function deleteComponent(courseID, chapterID, componentID) {
   if (!getAuth().currentUser) throw new Error("you cant do this!");
-  return deleteDoc(doc(db, 'courses', courseID, 'chapters', chapterID, 'components', componentID));
+  return deleteDoc(
+    doc(
+      db,
+      "courses",
+      courseID,
+      "chapters",
+      chapterID,
+      "components",
+      componentID
+    )
+  );
 }
 
 // Signs-in with google.
@@ -210,7 +170,6 @@ export default function FirebaseContext({ children }) {
   );
 }
 
-
 /***** */
 // TODO: delete(0.5), ?flagsOfChange(all)?, finish (course, chapter),
 /****** */
@@ -236,15 +195,13 @@ export class Course {
 
   //setters
 
-  addChapter(name) {
-    this.chapterArr.push(
-      new Chapter(
-        name,
-        this.chapterArr.length + 1,
-        this.registerChange.bind(this)
-      )
-    );
-    this.isChanged = true;
+  async addNewChapter(name) {
+    let doc = await addDoc(collection(db, "courses", courseId, "chapters"), {
+      name: name,
+      position: this.chapterArr.length + 1,
+    });
+    this.DBaddChapter(name, doc.id);
+    return true;
   }
 
   DBaddChapter(name, id) {
@@ -289,26 +246,72 @@ export class Course {
     this.isChanged = true;
   }
 
-  _deleteChapter(index){
+  _deleteChapter(index) {
     //prompt(`deleteing is permanent and cannot be recovered, you can unpublish content instead. are you sure you want to delete?`)
-    if (index < 0 || index >= this._chapterArr.length){
+    if (index < 0 || index >= this._chapterArr.length) {
       alert("trying to remove a nonIndex");
       return;
     }
     this._chapterArr.splice(index, 1);
     for (index; index < this._chapterArr; index++) {
-      this._chapterArr[index].position = index+1;
+      this._chapterArr[index].position = index + 1;
     }
     this.isChanged = true;
   }
 
-  delete(index, confirm){
-    if (confirm == true){
-      this._deleteChapter(index)
-    }
-    else {
+  delete(index, confirm) {
+    if (confirm == true) {
+      this._deleteChapter(index);
+    } else {
       this._chapterArr[index].isPublished = false;
     }
+  }
+  async update(){
+    if (this.isChanged){
+      let courseRef = doc(db, "courses", this._id).withConverter(Course.Converter);
+      await updateDoc(courseRef, this);
+      for (let chapter of this._chapterArr) {
+        await chapter.update()
+      }
+      this.isChanged = false;
+    }
+      return true
+  }
+
+
+  async fill(){
+     const q = query(collection(db, "courses", this._id, "chapters"));
+     const chapters = await getDocs(q);
+    chapters.forEach(chapter => {
+      let data = chapter.data();
+      this.DBaddChapter(data.name, data.id);
+    });
+    return true;
+  }
+
+  static Converter = {
+    toFirestore: (course) => {
+      return {
+        creator: course._creator,
+        name: course._name,
+        isPublished: course._isPublished,
+      };
+    },
+    fromFirestore: (snapshot, options) => {
+      const data = snapshot.data(options);
+      return new Course(data.creator, data.name, snapshot.id);
+    },
+  }
+
+  static async getAllCourses() {
+    // return object with all the courses
+    const q = query(collection(db, "courses"));
+    return getDocs(q);
+  }
+  static async getCoursesByUserId(userId) {
+    // return object with all the courses
+    const q = query(collection(db, "courses"), where("creator", "==", userId));
+    return getDocs(q);
   }
 }
 
@@ -364,6 +367,7 @@ export class Chapter {
     }
   }
 
+
   set isPublished(status) {
     this._isPublished = status;
     this.isChanged = true;
@@ -385,18 +389,18 @@ export class Chapter {
   }
 
   //methods
-  addComponent(name, type, url) {
-    this._componentArr.push(
-      new Component(
-        name,
-        this._componentArr.length + 1,
-        type,
-        url,
-        this.registerComponentChange.bind(this)
-      )
+  async addNewComponent(name, type, url) {
+    let doc = await addDoc(
+      collection(db, "courses", courseId, "chapters", chapterId, "components"),
+      {
+        name: name,
+        type: type,
+        url: url,
+        position: this._componentArr.length + 1,
+      }
     );
-    this.isChanged = true;
-    this.registerChange();
+    this.DBaddComponent(name, type, url, doc.id);
+    return true;
   }
 
   DBaddComponent(name, type, url, id) {
@@ -415,7 +419,28 @@ export class Chapter {
       throw new TypeError("id must be a string");
     }
   }
-
+  async update(){
+    if (this.isChanged){
+    let chapterRef = doc(db, "courses", courseID, 'chapters', this.id).withConverter(Chapter.Converter);
+    await updateDoc(chapterRef, this);
+    for (let comp of this._componentArr) {
+      await comp.update()
+    }
+    this.isChanged = false;
+    }
+    return true
+    }
+  async fill(){
+    const q = query(
+      collection(db, "courses", courseId, "chapters", chapterID, "components")
+    );
+    let docs = await getDocs(q);
+    docs.forEach(comp => {
+      let data = comp.data();
+      this.DBaddComponent(data.name, data.type, data.url, comp.id)
+    });
+    return true;
+  }
   publish() {
     this.isPublished = !this._isPublished;
     this.isChanged = true;
@@ -447,26 +472,38 @@ export class Chapter {
     this.registerChange();
   }
 
-  _deleteComponent(index){
-    if (index < 0 || index >= this._componentArr.length){
+  _deleteComponent(index) {
+    if (index < 0 || index >= this._componentArr.length) {
       alert("trying to remove a nonIndex");
       return;
     }
     this._componentArr.splice(index, 1);
     for (index; index < this._componentArr.length; index++) {
-      this._componentArr[index].position = index+1;
+      this._componentArr[index].position = index + 1;
     }
     this.isChanged = true;
     this.registerChange();
   }
-  
-  delete(index, confirm){
-    if (confirm == true){
+
+  delete(index, confirm) {
+    if (confirm == true) {
       this._deleteComponent(index);
-    }
-    else {
+    } else {
       this._componentArr[index].isPublished = false;
     }
+  }
+    static Converter = {
+      toFirestore: (chapter) => {
+          return {
+            name: chapter._name,
+            position: chapter._position,
+            isPublished: chapter._isPublished,
+          };
+      },
+      fromFirestore: (snapshot, options) => {
+          const data = snapshot.data(options);
+          return new Chapter(data.name, data.position,  snapshot.id);
+      }
   }
 }
 
@@ -600,4 +637,14 @@ export class Component {
     this.isChanged = true;
     this.registerChange();
   }
+  
+  async update(){
+    if (this.isChanged){
+      let compRef = doc(db, "courses", courseID, 'chapters', chapterID, 'components', this._id).withConverter(Component.Converter);
+      await updateDoc(compRef, this);
+      this.isChanged = false;
+    }
+      return true
+  }
 }
+
