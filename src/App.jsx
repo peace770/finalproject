@@ -1,16 +1,17 @@
-import Common from "./components/common";
+
+import Common from './components/common';
+import './css/app.css';
+import Homepage from './pages/homepage';
 import FirebaseContext from "./components/FirebaseContext";
-import Tests from "./components/Tests";
-import "./css/app.css";
-import Homepage from "./pages/homepage";
+import Some from './some';
 
 function App() {
   return (
     <FirebaseContext>
-      <div className="App">
-        <Tests />
-        hel
-      </div>
+    <div className="App" dir='rtl'>
+      {/* <Common/> */}
+        <Some/>
+    </div>
     </FirebaseContext>
   );
 }
