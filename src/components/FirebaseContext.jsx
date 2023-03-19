@@ -52,80 +52,16 @@ export async function createNewCourse(courseName) {
   });
   return new Course(getAuth().currentUser.uid, courseName, doc.id);
 }
+export
 
 
 
 
-async function updateComponentData(courseID, chapterID, componentID, data) {
-  if (!getAuth().currentUser) throw new Error("you cant do this!");
-  let docRef = doc(
-    db,
-    "courses",
-    courseID,
-    "chapters",
-    chapterID,
-    "components",
-    componentID
-  );
-  return updateDoc(docRef, data);
-}
-
-async function updateChapterData(courseID, chapterID, data) {
-  if (!getAuth().currentUser) throw new Error("you cant do this!");
-  let docRef = doc(db, "courses", courseID, "chapters", chapterID);
-  return updateDoc(docRef, data);
-}
 
 
 
-export function updateCourse(course) {
-  //TODO: update arr to real names
-  if (!getAuth().currentUser) throw new Error("you cant do this!");
-  var q = { queue: 0, errors: [] };
-  for (let chapter of course.arr) {
-    if (chapter.hasChanged) {
-      q.queue += 1;
-      updateChapterData(course.id, chapter.id, chapter)
-        .then(() => {
-          q.queue -= 1;
-          chapter.hasChanged = false;
-        })
-        .catch((err) =>
-          q.errors.push({ in: "chapter", id: chapter.id, error: err })
-        );
-    }
-    for (let comp of chapter.arr) {
-      {
-        if (comp.hasChanged) {
-          q.queue += 1;
-          updateComponentData(course.id, chapter.id, comp.id, comp)
-            .then(() => {
-              q.queue -= 1;
-              comp.hasChanged = false;
-            })
-            .catch((err) =>
-              q.errors.push({ in: "component", id: comp.id, error: err })
-            );
-        }
-      }
-    }
-  }
-}
 
-export async function deleteComponent(courseID, chapterID, componentID) {
-  if (!getAuth().currentUser) throw new Error("you cant do this!");
-  return deleteDoc(
-    doc(
-      db,
-      "courses",
-      courseID,
-      "chapters",
-      chapterID,
-      "components",
-      componentID
-    )
-  );
-}
+
 
 // Signs-in with google.
 export async function signInWithGoogle() {
@@ -246,20 +182,24 @@ export class Course {
     this.isChanged = true;
   }
 
-  _deleteChapter(index) {
-    //prompt(`deleteing is permanent and cannot be recovered, you can unpublish content instead. are you sure you want to delete?`)
-    if (index < 0 || index >= this._chapterArr.length) {
-      alert("trying to remove a nonIndex");
-      return;
-    }
+  async _deleteChapter(index) {
+    let result = await this._chapterArr[index].deleteAllComponents(true);
+    if (!result) return false;
+    await deleteDoc(doc(db, 'courses', courseID, 'chapters', this._id));
     this._chapterArr.splice(index, 1);
     for (index; index < this._chapterArr; index++) {
       this._chapterArr[index].position = index + 1;
     }
     this.isChanged = true;
+    return true
   }
 
-  delete(index, confirm) {
+  delete(index, confirm) {    
+     //prompt(`deleteing is permanent and cannot be recovered, you can unpublish content instead. are you sure you want to delete?`)
+     if (index < 0 || index >= this._chapterArr.length) {
+      alert("trying to remove a nonIndex");
+      return;
+    }      
     if (confirm == true) {
       this._deleteChapter(index);
     } else {
@@ -312,6 +252,13 @@ export class Course {
     // return object with all the courses
     const q = query(collection(db, "courses"), where("creator", "==", userId));
     return getDocs(q);
+  }
+  static async stupidlyDeleteCourse(confirm){
+    if (!confirm) return false;
+    while (this._chapterArr.length > 0){
+      await this._deleteChapter(this._chapterArr.length - 1);
+    }
+    return deleteDoc(doc(db, 'courses', this._id))
   }
 }
 
@@ -472,20 +419,36 @@ export class Chapter {
     this.registerChange();
   }
 
-  _deleteComponent(index) {
-    if (index < 0 || index >= this._componentArr.length) {
-      alert("trying to remove a nonIndex");
-      return;
-    }
+  async _deleteComponent(index) {
+    await deleteDoc(doc(
+        db,
+        "courses", courseID,
+        "chapters", chapterID,
+        "components", this._componentArr[index]._id)
+    ); 
     this._componentArr.splice(index, 1);
     for (index; index < this._componentArr.length; index++) {
       this._componentArr[index].position = index + 1;
     }
     this.isChanged = true;
     this.registerChange();
+    return true;
   }
 
-  delete(index, confirm) {
+  async deleteAllComponents(confirm){
+    if (confirm){
+      while (this._componentArr.length > 0){
+        await this._deleteComponent(this._componentArr.length - 1)
+      }
+      return true
+    }
+    return false
+  }
+  delete(index, confirm) { 
+    if (index < 0 || index >= this._componentArr.length) {
+      alert("trying to remove a nonIndex");
+      return;
+    }  
     if (confirm == true) {
       this._deleteComponent(index);
     } else {
@@ -646,5 +609,7 @@ export class Component {
     }
       return true
   }
-}
+
+   
+   }
 
