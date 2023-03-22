@@ -37,3 +37,19 @@ export default function Some() {
   </div>
   )
 }
+let set = new Set();
+set.add("hello");
+set.add("world");
+set.add("you're");
+set.add("watching");
+set.add("bbc");
+console.log(set);
+set.delete("bbc")
+console.log(set.size); 
+console.log(set.values());
+console.log(set.keys());
+console.log(set.has("hello"));
+console.log(set.entries());
+set.forEach( val => {
+  console.log(val);
+})

@@ -84,23 +84,41 @@ export default function FirebaseContext({ children }) {
 export class Course {
   _id;
   _creator;
-  _Name;
+  _name;
   _chapterArr;
   _isPublished;
   _tags;
   isChanged;
 
-  constructor(creator, name, id) {
-    this._creator = creator;
-    this._name = name;
+  constructor(creator, name, id, tags) {
+    if (typeof creator === "string") {
+      this._creator = creator;
+    } else {
+      throw new TypeError("creator must be a string");
+    }
+    if (typeof name === "string") {
+      this._name = name;
+    }
+    else{
+      throw new TypeError("name must be a string")
+    }
+    if (typeof id === "string"){
     this._id = id;
+  } else {
+    throw new TypeError ("id must be astring")
+  }
     this._chapterArr = [];
     this._isPublished = false;
     this.isChanged = false;
-    this._tags = new Set();
+    this._tags = new Set(tags);
   }
 
   //setters
+  async addTag(newTag){
+    //cheack DB for tags
+    this._tags.add(newTag);
+    this.isChanged = true;
+  }
 
   async addNewChapter(name) {
     let doc = await addDoc(collection(db, "courses", courseId, "chapters"), {
@@ -205,11 +223,12 @@ export class Course {
         creator: course._creator,
         name: course._name,
         isPublished: course._isPublished,
+        tags: course._tags
       };
     },
     fromFirestore: (snapshot, options) => {
       const data = snapshot.data(options);
-      return new Course(data.creator, data.name, snapshot.id);
+      return new Course(data.creator, data.name, snapshot.id, data.tags);
     },
   }
 
@@ -220,16 +239,18 @@ export class Course {
   }
   static async getCoursesByCreatorId(userId) {
     // return object with all the courses
-    const q = query(collection(db, "courses"), where("creator", "==", userId));
+    const q = query(collection(db, "courses"), where("creator", "==", userId)).withConverter(Course.Converter);
     return getDocs(q);
   }
   static  async  createNewCourse(courseName) {
     if (!getAuth().currentUser) throw new Error("you cant do this!");
-    let doc = await addDoc(collection(db, "courses"), {
+    let data ={
       name: courseName,
       creator: getAuth().currentUser.uid,
-    });
-    return new Course(getAuth().currentUser.uid, courseName, doc.id);
+      tags: []
+    };
+    let doc = await addDoc(collection(db, "courses"), data);
+    return new Course(getAuth().currentUser.uid, data.name, doc.id, data.tags);
   }
   static async stupidlyDeleteCourse(confirm){
     if (!confirm) return false;
@@ -249,7 +270,7 @@ export class Chapter {
   _isPublished;
   isChanged;
   registerChange;
-  course
+  course;
 
   constructor(name, position, registerChange, id = "", course) {
     if (typeof id === "string") {
@@ -270,7 +291,7 @@ export class Chapter {
     if (typeof course === typeof {}) {
       this.course = course;
     } else {
-      throw new TypeError("coursee must be a obbject (instance of Course)");
+      throw new TypeError("coursee must be a object (instance of Course)");
     }
     this._componentArr = [];
     this._isPublished = false;
