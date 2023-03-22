@@ -14,10 +14,6 @@ import {
   collection,
   addDoc,
   query,
-  orderBy,
-  limit,
-  onSnapshot,
-  setDoc,
   updateDoc,
   doc,
   serverTimestamp,
@@ -25,14 +21,6 @@ import {
   where,
   deleteDoc,
 } from "firebase/firestore";
-import {
-  getStorage,
-  ref,
-  uploadBytesResumable,
-  getDownloadURL,
-} from "firebase/storage";
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
-import { getPerformance } from "firebase/performance";
 
 const urlRegex = /^(?:(?:https?|ftp):\/\/)?(?:\S+(?::\S*)?@)?(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|(?:[a-z0-9-]+\.)+[a-z]{2,})(?::\d{2,5})?(?:\/\S*)?$/i;
 
@@ -42,23 +30,6 @@ const firebaseAppConfig = getFirebaseConfig();
 const app = initializeApp(firebaseAppConfig);
 
 const db = getFirestore(app);
-
-
-export async function createNewCourse(courseName) {
-  if (!getAuth().currentUser) throw new Error("you cant do this!");
-  let doc = await addDoc(collection(db, "courses"), {
-    name: courseName,
-    creator: getAuth().currentUser.uid,
-  });
-  return new Course(getAuth().currentUser.uid, courseName, doc.id);
-}
-export
-
-
-
-
-
-
 
 
 
@@ -141,18 +112,16 @@ export class Course {
   }
 
   DBaddChapter(name, id) {
-    if (typeof id === "string") {
+    if (typeof id != typeof "") throw new TypeError("id must be a string");
       this.chapterArr.push(
         new Chapter(
           name,
           this.chapterArr.length + 1,
           this.registerChange.bind(this),
-          id
+          id,
+          this
         )
       );
-    } else {
-      throw new TypeError("id must be a string");
-    }
   }
 
   publish() {
@@ -183,9 +152,10 @@ export class Course {
   }
 
   async _deleteChapter(index) {
-    let result = await this._chapterArr[index].deleteAllComponents(true);
+    let chapter = this._chapterArr[index];
+    let result = await chapter.deleteAllComponents(true);
     if (!result) return false;
-    await deleteDoc(doc(db, 'courses', courseID, 'chapters', this._id));
+    await deleteDoc(doc(db, 'courses', this._id, 'chapters', chapter._id));
     this._chapterArr.splice(index, 1);
     for (index; index < this._chapterArr; index++) {
       this._chapterArr[index].position = index + 1;
@@ -212,7 +182,7 @@ export class Course {
       await updateDoc(courseRef, this);
       for (let chapter of this._chapterArr) {
         await chapter.update()
-      }
+      } 
       this.isChanged = false;
     }
       return true
@@ -245,13 +215,21 @@ export class Course {
 
   static async getAllCourses() {
     // return object with all the courses
-    const q = query(collection(db, "courses"));
+    const q = query(collection(db, "courses")).withConverter(Course.Converter);
     return getDocs(q);
   }
-  static async getCoursesByUserId(userId) {
+  static async getCoursesByCreatorId(userId) {
     // return object with all the courses
     const q = query(collection(db, "courses"), where("creator", "==", userId));
     return getDocs(q);
+  }
+  static  async  createNewCourse(courseName) {
+    if (!getAuth().currentUser) throw new Error("you cant do this!");
+    let doc = await addDoc(collection(db, "courses"), {
+      name: courseName,
+      creator: getAuth().currentUser.uid,
+    });
+    return new Course(getAuth().currentUser.uid, courseName, doc.id);
   }
   static async stupidlyDeleteCourse(confirm){
     if (!confirm) return false;
@@ -260,6 +238,7 @@ export class Course {
     }
     return deleteDoc(doc(db, 'courses', this._id))
   }
+
 }
 
 export class Chapter {
@@ -270,8 +249,9 @@ export class Chapter {
   _isPublished;
   isChanged;
   registerChange;
+  course
 
-  constructor(name, position, registerChange, id = "") {
+  constructor(name, position, registerChange, id = "", course) {
     if (typeof id === "string") {
       this._id = id;
     } else {
@@ -286,6 +266,11 @@ export class Chapter {
       this._Position = position;
     } else {
       throw new TypeError("position  must be a number");
+    }
+    if (typeof course === typeof {}) {
+      this.course = course;
+    } else {
+      throw new TypeError("coursee must be a obbject (instance of Course)");
     }
     this._componentArr = [];
     this._isPublished = false;
@@ -338,7 +323,7 @@ export class Chapter {
   //methods
   async addNewComponent(name, type, url) {
     let doc = await addDoc(
-      collection(db, "courses", courseId, "chapters", chapterId, "components"),
+      collection(db, "courses", this.course._id, "chapters", this._id, "components"),
       {
         name: name,
         type: type,
@@ -359,7 +344,8 @@ export class Chapter {
           type,
           url,
           this.registerComponentChange.bind(this),
-          id
+          id,
+          this
         )
       );
     } else {
@@ -368,7 +354,7 @@ export class Chapter {
   }
   async update(){
     if (this.isChanged){
-    let chapterRef = doc(db, "courses", courseID, 'chapters', this.id).withConverter(Chapter.Converter);
+    let chapterRef = doc(db, "courses", this.course._id, 'chapters', this.id).withConverter(Chapter.Converter);
     await updateDoc(chapterRef, this);
     for (let comp of this._componentArr) {
       await comp.update()
@@ -379,7 +365,7 @@ export class Chapter {
     }
   async fill(){
     const q = query(
-      collection(db, "courses", courseId, "chapters", chapterID, "components")
+      collection(db, "courses", this.course._id, 'chapters', this.id, "components")
     );
     let docs = await getDocs(q);
     docs.forEach(comp => {
@@ -422,8 +408,7 @@ export class Chapter {
   async _deleteComponent(index) {
     await deleteDoc(doc(
         db,
-        "courses", courseID,
-        "chapters", chapterID,
+        "courses", this.course._id, 'chapters', this.id,
         "components", this._componentArr[index]._id)
     ); 
     this._componentArr.splice(index, 1);
@@ -462,10 +447,6 @@ export class Chapter {
             position: chapter._position,
             isPublished: chapter._isPublished,
           };
-      },
-      fromFirestore: (snapshot, options) => {
-          const data = snapshot.data(options);
-          return new Chapter(data.name, data.position,  snapshot.id);
       }
   }
 }
@@ -479,8 +460,9 @@ export class Component {
   _isPublished;
   isChanged;
   registerChange;
+  chapter;
 
-  constructor(name, position, type, url, registerChange, id = "") {
+  constructor(name, position, type, url, registerChange, id = "", chapter) {
     if (typeof id === "string") {
       this._id = id;
     } else {
@@ -505,6 +487,11 @@ export class Component {
       this._url = url;
     } else {
       throw new Error("URL is invalid");
+    }
+    if (typeof chapter === typeof {}) {
+      this.chapter = chapter;
+    } else {
+      throw new TypeError("chapter must be a object (instance of Chapter)");
     }
     this._isPublished = false;
     this.isChanged = false;
@@ -603,13 +590,21 @@ export class Component {
   
   async update(){
     if (this.isChanged){
-      let compRef = doc(db, "courses", courseID, 'chapters', chapterID, 'components', this._id).withConverter(Component.Converter);
+      let compRef = doc(db, "courses", this.chapter.course._id, 'chapters', this.chapter.id, 'components', this._id).withConverter(Component.Converter);
       await updateDoc(compRef, this);
       this.isChanged = false;
     }
       return true
   }
 
-   
+  static Converter = {
+    toFirestore: (chapter) => {
+        return {
+          /*
+          todo----------------------------------------------------
+          */
+        };
+    }
+}
    }
 
