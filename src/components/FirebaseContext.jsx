@@ -8,6 +8,7 @@ import {
   signInWithPopup,
   signOut,
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
 } from "firebase/auth";
 import {
   getFirestore,
@@ -42,6 +43,10 @@ export async function signInWithPassword(email, password) {
   // Sign in Firebase using email and password.
   await signInWithEmailAndPassword(getAuth(), email, password);
 }
+
+//createUserWithEmailAndPassword(getAuth(), email, password)
+// https://firebase.google.com/docs/auth/web/password-auth
+// create user doc
 
 // Signs-out .
 export function signOutUser() {

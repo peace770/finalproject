@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import DeleteModal from "./DeleteModal";
 import { Course, Chapter, Component } from "./components/FirebaseContext";
-import CustomPopup from "./gpt";
 
 export default function Some() {
   let x = false;
