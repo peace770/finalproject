@@ -13,7 +13,8 @@ import FormButton from './modules/form/FormButton';
 import FormFeedback from './modules/form/FormFeedback';
 import withRoot from './modules/withRoot';
 import GoogleButton from 'react-google-button';
-import { LoginContext } from '../components/FirebaseContext';
+import { LoginContext, SignUpWithEmailAndPassword } from '../components/FirebaseContext';
+
 
 function SignUp() {
   const user = React.useContext(LoginContext);
@@ -37,6 +38,13 @@ function SignUp() {
   const handleSubmit = (form) => {
     setSent(true);
     console.log(form);
+    SignUpWithEmailAndPassword(form.firstName, form.lastName ,form.email, form.password)
+    .catch((error) =>{
+      console.log(error);
+      setSent(false);
+      
+      //take care of shit
+    })
   };
 
   return (

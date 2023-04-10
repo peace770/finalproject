@@ -21,6 +21,7 @@ import {
   getDocs,
   where,
   deleteDoc,
+  setDoc,
 } from "firebase/firestore";
 
 const urlRegex = /^(?:(?:https?|ftp):\/\/)?(?:\S+(?::\S*)?@)?(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|(?:[a-z0-9-]+\.)+[a-z]{2,})(?::\d{2,5})?(?:\/\S*)?$/i;
@@ -44,9 +45,17 @@ export async function signInWithPassword(email, password) {
   await signInWithEmailAndPassword(getAuth(), email, password);
 }
 
-//createUserWithEmailAndPassword(getAuth(), email, password)
-// https://firebase.google.com/docs/auth/web/password-auth
-// create user doc
+export async function SignUpWithEmailAndPassword(firstName, lastName, email, password){
+ let userCredential = await createUserWithEmailAndPassword(getAuth(), email, password);
+ let user = userCredential.user;
+  await setDoc(doc(db, "users", user.uid), {
+  creator: false,
+  name: {
+    first : firstName,
+    last: lastName
+  }
+});
+}
 
 // Signs-out .
 export function signOutUser() {
