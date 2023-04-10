@@ -67,6 +67,12 @@ export function signOutUser() {
 export function isUserSignedIn() {
   return !!getAuth().currentUser;
 }
+export function redirectIfUserNotSignedUp(user) {
+  if (!user) window.location.href = "www.youtube.com";
+}
+export function redirectIfUserIsSignedUp(user) {
+  if (user) window.location.href = "www.youtube.com";
+}
 
 export default function FirebaseContext({ children }) {
   const [LoginState, setLoginState] = useState(getAuth().currentUser);

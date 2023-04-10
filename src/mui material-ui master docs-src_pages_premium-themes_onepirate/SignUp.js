@@ -13,13 +13,13 @@ import FormButton from './modules/form/FormButton';
 import FormFeedback from './modules/form/FormFeedback';
 import withRoot from './modules/withRoot';
 import GoogleButton from 'react-google-button';
-import { LoginContext, SignUpWithEmailAndPassword } from '../components/FirebaseContext';
+import { LoginContext, redirectIfUserIsSignedUp } from '../components/FirebaseContext';
 
 
 function SignUp() {
   const user = React.useContext(LoginContext);
-  // if (user) window.location.href = "http://www.w3schools.com";
-
+  redirectIfUserIsSignedUp(user);
+  
   const [sent, setSent] = React.useState(false);
 
   const validate = (values) => {
