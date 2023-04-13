@@ -19,7 +19,7 @@ function SignIn() {
   redirectIfUserIsSignedUp(user);
 
   const [sent, setSent] = React.useState(false);
-
+  const [serverError, setServerError]= React.useState("")
   const validate = (values) => {
     const errors = required(['email', 'password'], values);
 
@@ -36,7 +36,11 @@ function SignIn() {
   const handleSubmit = (form) => {
     setSent(true);
     console.log(form);
-    signInWithPassword(form.email, form.password);
+    signInWithPassword(form.email, form.password)
+    .catch((error) =>{
+      setServerError(error.code.split("/")[1].replaceAll("-", " "));
+      setSent(false); 
+    }) 
   };
 
   return (
@@ -65,6 +69,7 @@ function SignIn() {
         >
           {({ handleSubmit: handleSubmit2, submitting }) => (
             <Box component="form" onSubmit={handleSubmit2} noValidate sx={{ mt: 6 }}>
+              {serverError === "user not found" ?<Typography variant="h5" align="center" sx={{color:"red"}}>{serverError.toUpperCase()}</Typography>:null}
               <Field
                 autoComplete="email"
                 autoFocus
@@ -77,6 +82,7 @@ function SignIn() {
                 required
                 size="large"
               />
+              {serverError === "wrong password"?<Typography variant="h5" align="center" sx={{color:"red", paddingTop: "1em"}}>{serverError.toUpperCase()}</Typography>:null}
               <Field
                 fullWidth
                 size="large"
@@ -110,12 +116,12 @@ function SignIn() {
             </Box>
           )}
         </Form>
-        <Typography align="center">
+        {/* <Typography align="center">
           <Link underline="always" href="/premium-themes/onepirate/forgot-password/">
             Forgot password?
           </Link>
         </Typography>
-        
+         */}
       <GoogleButton style={{margin:'auto'}} onClick={signInWithGoogle}/>
       </AppForm>
       <AppFooter />

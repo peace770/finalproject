@@ -2,7 +2,7 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Link from '@mui/material/Link';
-import { Field, Form, FormSpy } from 'react-final-form';
+import { Field, Form, FormSpy, } from 'react-final-form';
 import Typography from './modules/components/Typography';
 import AppFooter from './modules/views/AppFooter';
 import AppAppBar from './modules/views/AppAppBar';
@@ -13,18 +13,20 @@ import FormButton from './modules/form/FormButton';
 import FormFeedback from './modules/form/FormFeedback';
 import withRoot from './modules/withRoot';
 import GoogleButton from 'react-google-button';
-import { LoginContext, redirectIfUserIsSignedUp } from '../components/FirebaseContext';
+import { LoginContext, redirectIfUserIsSignedUp, SignUpWithEmailAndPassword, signInWithGoogle} from '../components/FirebaseContext';
+
 
 
 function SignUp() {
   const user = React.useContext(LoginContext);
-  redirectIfUserIsSignedUp(user);
+   redirectIfUserIsSignedUp(user);
   
-  const [sent, setSent] = React.useState(false);
+  const [sent, setSent] = React.useState(false);  
+  const [errorMessage, setErrorMessage] =React.useState("")
 
   const validate = (values) => {
     const errors = required(['firstName', 'lastName', 'email', 'password'], values);
-
+    
     if (!errors.email) {
       const emailError = email(values.email);
       if (emailError) {
@@ -40,11 +42,9 @@ function SignUp() {
     console.log(form);
     SignUpWithEmailAndPassword(form.firstName, form.lastName ,form.email, form.password)
     .catch((error) =>{
-      console.log(error);
-      setSent(false);
-      
-      //take care of shit
-    })
+      setErrorMessage(error.code.split("/")[1].replaceAll("-", " "));
+      setSent(false); 
+    }) 
   };
 
   return (
@@ -60,12 +60,15 @@ function SignUp() {
               Already have an account?
             </Link>
           </Typography>
+          <Box component="div" sx={{display:"flex", justifyContent: "center", padding: "1em"}}>
+        <GoogleButton style={{margin:'auto'}} onClick={signInWithGoogle}/>
+        </Box>
         </React.Fragment>
         <Form
           onSubmit={handleSubmit}
-          subscription={{ submitting: true }}
+          subscription={{ submitting: true}}
           validate={validate}
-        >
+          >
           {({ handleSubmit: handleSubmit2, submitting }) => (
             <Box component="form" onSubmit={handleSubmit2} noValidate sx={{ mt: 6 }}>
               <Grid container spacing={2}>
@@ -102,7 +105,7 @@ function SignUp() {
                 margin="normal"
                 name="email"
                 required
-              />
+                />
               <Field
                 fullWidth
                 component={RFTextField}
@@ -123,6 +126,7 @@ function SignUp() {
                   ) : null
                 }
               </FormSpy>
+              <Typography variant="h5" align="center" sx={{color:"red"}}>{errorMessage.toUpperCase()}</Typography>
               <FormButton
                 sx={{ mt: 3, mb: 2 }}
                 disabled={submitting || sent}
@@ -135,7 +139,8 @@ function SignUp() {
           )}
         </Form>
       </AppForm>
-      <AppFooter />
+      <AppFooter/>
+      
     </React.Fragment>
   );
 }
