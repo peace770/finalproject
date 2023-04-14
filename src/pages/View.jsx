@@ -1,48 +1,47 @@
 import { Box } from "@mui/material";
-import React from "react";
-import CourseMenu from "../components/Personal/CourseMenu";
-import Personal from "../components/Personal/Personal";
-import { Menu } from '../tempData'
-export default function View() {
-  
+import React, { useEffect, useState } from "react";
+import CourseNavigetionSideMenu from "../components/CourseNavigetionSideMenu";
+import { Course } from "../components/FirebaseContext";
+import { useParams } from "react-router-dom";
+import VideoContent from "../components/Personal/VideoContent";
 
-  return (
-    <Personal>
-      <Box sx={{ display: "flex" }}>
-        <CourseMenu>{Menu}</CourseMenu>
-        <Box
-          sx={{
-            border: "0.1rem solid var(--light)",
-            padding: "2rem",
-            position: { xs: "absolute", md: "unset" },
-            zIndex: -1,
-          }}
-        >
-          {Array(10).fill(lorem)}
-        </Box>
-      </Box>
-    </Personal>
+export default function View() {
+  const [course, setCourse] = useState(null);
+  const [currentComponent, setCurrentComponent] = useState(null);
+
+  const { courseId, chapterId, componentId } = useParams();
+
+  if (!course || courseId != course.id) {
+    Course.buildCourse(courseId).then((data) => setCourse(data));
+  } else if (
+    !currentComponent ||
+    chapterId != currentComponent.chapter.id ||
+    componentId != currentComponent.id
+  ) {
+    let chapter = course.chapters.find((chapter) => chapter.id == chapterId);
+    if (!chapter) throw new Error("chapter not found");
+
+    let component = chapter.components.find((c) => c.id == componentId);
+    if (!component) throw new Error("component not found");
+
+    setCurrentComponent(component);
+  }
+  return course ? (
+    <Box>
+      <CourseNavigetionSideMenu course={course} />
+      {currentComponent ? (
+        <VideoContent videoId={youtube_parser(currentComponent.url)} />
+      ) : (
+        <></>
+      )}
+    </Box>
+  ) : (
+    <h1>wait!</h1>
   );
 }
 
-var lorem = (
-  <p>
-    Lorem ipsum dolor sit amet consectetur adipisicing elit. Perferendis nobis
-    doloribus officiis sint impedit deleniti dolorem ipsum tempora! Tempore unde
-    atque ipsam mollitia voluptates aperiam quia laboriosam, quaerat neque
-    inventore, accusamus animi consectetur hic recusandae voluptate maxime odit
-    eveniet dolores dolor cum! Voluptatibus earum aspernatur ipsa exercitationem
-    facilis labore eveniet suscipit alias voluptatem similique illo quam
-    doloribus numquam, deserunt dicta. Possimus sapiente molestiae quidem.
-    Facilis aliquid aspernatur delectus? Inventore exercitationem pariatur
-    cupiditate ullam officiis eligendi, quae sint, unde praesentium doloremque
-    eaque aut. Nesciunt, pariatur ex! Nulla a, accusamus fuga saepe blanditiis
-    amet inventore laboriosam ipsum voluptate aut non odio, corporis dolore,
-    rerum in laudantium aspernatur. Excepturi ut, magnam, velit consequatur
-    natus numquam, deserunt optio fuga dicta doloribus maxime labore possimus
-    laboriosam quis minus impedit? Illo cupiditate delectus, laborum soluta
-    molestiae quibusdam possimus. Inventore aperiam voluptatum porro tempore
-    quae sint voluptatem deserunt deleniti fuga pariatur laboriosam aut
-    reprehenderit eaque, cupiditate accusantium.
-  </p>
-);
+function youtube_parser(url) {
+  var regExp = /.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#\&\?]*).*/;
+  var match = url.match(regExp);
+  return match && match[1].length == 11 ? match[1] : false;
+}

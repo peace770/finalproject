@@ -22,6 +22,7 @@ import {
   where,
   deleteDoc,
   setDoc,
+  getDoc,
 } from "firebase/firestore";
 
 const urlRegex = /^(?:(?:https?|ftp):\/\/)?(?:\S+(?::\S*)?@)?(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|(?:[a-z0-9-]+\.)+[a-z]{2,})(?::\d{2,5})?(?:\/\S*)?$/i;
@@ -119,6 +120,17 @@ export class Course {
     this._tags = new Set(tags);
   }
 
+  // getters
+  get chapters(){
+    return this._chapterArr;
+  }
+  get name(){
+    return this._name;
+  }
+  get id(){
+    return this._id;
+  }
+
   //setters
   async addTag(newTag){
     //cheack DB for tags
@@ -139,10 +151,10 @@ export class Course {
 
   DBaddChapter(name, id) {
     if (typeof id != typeof "") throw new TypeError("id must be a string");
-    this.chapterArr.push(
+    this._chapterArr.push(
       new Chapter(
         name,
-        this.chapterArr.length + 1,
+        this._chapterArr.length + 1,
         this.registerChange.bind(this),
         id,
         this
@@ -220,8 +232,8 @@ export class Course {
     const q = query(collection(db, "courses", this._id, "chapters"));
     const chapters = await getDocs(q);
     chapters.forEach((chapter) => {
-      let data = chapter.data();
-      this.DBaddChapter(data.name, data.id);
+      let {name} = chapter.data();
+      this.DBaddChapter(name, chapter.id);
     });
     return true;
   }
@@ -250,6 +262,19 @@ export class Course {
     // return object with all the courses
     const q = query(collection(db, "courses"), where("creator", "==", userId)).withConverter(Course.Converter);
     return getDocs(q);
+  }
+  
+  static async getCourse(courseId) {
+    const q = query(doc(db, "courses", courseId)).withConverter(Course.Converter);
+    return getDoc(q);
+  }
+  static async buildCourse(courseId){
+    let course = await this.getCourse(courseId);
+    course = course.data();
+    await course.fill();
+
+    for (let chapter of course.chapters) await chapter.fill();
+    return course;
   }
   static async createNewCourse(courseName) {
     if (!getAuth().currentUser) throw new Error("you cant do this!");
@@ -347,6 +372,9 @@ export class Chapter {
   }
   get isPublished() {
     return this._isPublished;
+  }
+  get components(){
+    return this._componentArr;
   }
 
   //methods

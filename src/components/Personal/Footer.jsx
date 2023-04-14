@@ -1,8 +1,7 @@
 
 import React from "react";
 import { Box, Container, Grid, Typography } from "@mui/material";
-import {siteName} from '../../App'
-
+let siteName = 'hgjk';
 export const Footer = () => {
   return (
     <Box

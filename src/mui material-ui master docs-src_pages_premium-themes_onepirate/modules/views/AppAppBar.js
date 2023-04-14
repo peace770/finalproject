@@ -1,6 +1,5 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
-import Link from "@mui/material/Link";
 import AppBar from "../components/AppBar";
 import Toolbar from "../components/Toolbar";
 import IconButton from "@mui/material/IconButton";
@@ -11,6 +10,8 @@ import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import { getAuth } from "firebase/auth";
 import { signInWithGoogle , LoginContext, signOutUser} from "../../../components/FirebaseContext";
+import {Link} from 'react-router-dom'
+import { CANCEL_A_TAG_DEFAULT_STYLE } from "../../../util";
 
 const rightLink = {
   fontSize: 16,
@@ -27,14 +28,15 @@ console.log(user);
       <AppBar position="fixed">
         <Toolbar sx={{ justifyContent: "space-between" }}>
           <Box sx={{ flex: 1 }} />
-          <Link
+          <Link to="/" style={CANCEL_A_TAG_DEFAULT_STYLE}>
+          <Typography
             variant="h6"
             underline="none"
             color="inherit"
-            href="/premium-themes/onepirate/"
             sx={{ fontSize: 24 }}
           >
             {"onepirate"}
+          </Typography>
           </Link>
           {user ? <UserMenu/> : <SignInUp/>}
         </Toolbar>
@@ -85,25 +87,27 @@ function UserMenu(){
   )
 }
 function SignInUp() {
+  
   return (
     <Box sx={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
-            <Link
+            <Link to={'/signin'} style={CANCEL_A_TAG_DEFAULT_STYLE}>
+            <Typography 
               color="inherit"
               variant="h6"
               underline="none"
-              // href="/premium-themes/onepirate/sign-in/"
               sx={rightLink}
-              onClick={signInWithGoogle}
             >
               {"Sign In"}
+            </Typography>
             </Link>
-            <Link
+            <Link to={'/signup'} style={CANCEL_A_TAG_DEFAULT_STYLE}>
+            <Typography
               variant="h6"
               underline="none"
-              href="/premium-themes/onepirate/sign-up/"
               sx={{ ...rightLink, color: "secondary.main" }}
             >
               {"Sign Up"}
+            </Typography>
             </Link>
           </Box>
   )

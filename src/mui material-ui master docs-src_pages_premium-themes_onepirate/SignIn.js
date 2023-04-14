@@ -16,7 +16,7 @@ import { LoginContext, redirectIfUserIsSignedUp, signInWithGoogle, signInWithPas
 
 function SignIn() {
   const user = React.useContext(LoginContext);
-  redirectIfUserIsSignedUp(user);
+  //redirectIfUserIsSignedUp(user);
 
   const [sent, setSent] = React.useState(false);
   const [serverError, setServerError]= React.useState("")
