@@ -37,10 +37,12 @@ function SignIn() {
     setSent(true);
     console.log(form);
     signInWithPassword(form.email, form.password)
+    .then()
     .catch((error) =>{
       setServerError(error.code.split("/")[1].replaceAll("-", " "));
       setSent(false); 
     }) 
+    
   };
 
   return (
