@@ -4,6 +4,8 @@ import Home from "./mui material-ui master docs-src_pages_premium-themes_onepira
 import SignIn from "./mui material-ui master docs-src_pages_premium-themes_onepirate/SignIn";
 import SignUp from "./mui material-ui master docs-src_pages_premium-themes_onepirate/SignUp";
 import Dashboard from "./pages/Dashboard";
+import Terms from "./mui material-ui master docs-src_pages_premium-themes_onepirate/Terms"
+import Privacy from "./mui material-ui master docs-src_pages_premium-themes_onepirate/Privacy"
 import {
   LoginContext,
   redirectIfUserIsSignedIn,
@@ -33,6 +35,10 @@ export default function Router() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<h2>About</h2>} />
         <Route path="/*" element={<NotFound404 />} />
+        <Route path="/coursepage/:courseId" element={<></>} />
+        <Route path="/terms" element={<Terms/>}/>
+        <Route path="/privacy" element={<Privacy/>}/>
+
 
         <Route element={<NotSignedOnly />}>
           <Route path="/signin" element={<SignIn />} />
@@ -44,6 +50,7 @@ export default function Router() {
           <Route path="/course/:courseId/:componentId" element={<Course />} />
           <Route path="/logout" element={<Logout />} />
         </Route>
+
       </Route>
     </Routes>
   );

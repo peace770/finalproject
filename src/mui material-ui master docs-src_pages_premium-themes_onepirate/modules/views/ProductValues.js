@@ -4,7 +4,9 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Container from '@mui/material/Container';
 import Typography from '../components/Typography';
-
+import AccessTimeSharpIcon from '@mui/icons-material/AccessTimeSharp';
+import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
+import AutoStoriesOutlinedIcon from '@mui/icons-material/AutoStoriesOutlined';
 const item = {
   display: 'flex',
   flexDirection: 'column',
@@ -28,60 +30,46 @@ function ProductValues() {
         <Grid container spacing={5}>
           <Grid item xs={12} md={4}>
             <Box sx={item}>
-              <Box
-                component="img"
-                src="/static/themes/onepirate/productValues1.svg"
-                alt="suitcase"
-                sx={{ height: 55 }}
-              />
+            <PlaceOutlinedIcon sx={{fontSize: 80}}/>
               <Typography variant="h6" sx={{ my: 5 }}>
-                The best luxury hotels
+                בכל מקום
               </Typography>
               <Typography variant="h5">
                 {
-                  'From the latest trendy boutique hotel to the iconic palace with XXL pool'
+                  'בבית, בעבודה, בנסיעה, בקניות... '
+                }
+
+                {'השיעור תמיד נמצא איתך. '}
+              </Typography>
+              </Box>
+          </Grid>
+          <Grid item xs={12} md={4}>
+          <Box sx={item}>
+              <AccessTimeSharpIcon sx={{ fontSize: 80 }} />
+              <Typography variant="h6" sx={{ my: 5 }}>
+                בכל זמן
+              </Typography>
+              <Typography variant="h5">
+                {
+                  'לפני תפילה, אחרי תפילה, בהפסקת הצהריים, '
                 }
 
                 {
-                  ', go for a mini-vacation just a few subway stops away from your home.'
+                  'בין מנחה לערבית, או לפני השינה, בכל רגע קבע עיתים לתורה. '
                 }
               </Typography>
             </Box>
+            
           </Grid>
           <Grid item xs={12} md={4}>
             <Box sx={item}>
-              <Box
-                component="img"
-                src="/static/themes/onepirate/productValues2.svg"
-                alt="graph"
-                sx={{ height: 55 }}
-              />
+               <AutoStoriesOutlinedIcon sx={{fontSize: 80}}/>
               <Typography variant="h6" sx={{ my: 5 }}>
-                New experiences
+                בכל נושא
               </Typography>
               <Typography variant="h5">
-                {
-                  'Privatize a pool, take a Japanese bath or wake up in 900m2 of garden… '
-                }
-
-                {'your Sundays will not be alike.'}
-              </Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Box sx={item}>
-              <Box
-                component="img"
-                src="/static/themes/onepirate/productValues3.svg"
-                alt="clock"
-                sx={{ height: 55 }}
-              />
-              <Typography variant="h6" sx={{ my: 5 }}>
-                Exclusive rates
-              </Typography>
-              <Typography variant="h5">
-                {'By registering, you will access specially negotiated rates '}
-                {'that you will not find anywhere else.'}
+                {'שיעורים מסודרים בכל מקצועות התורה  '}
+                {'ללמוד, להבין, לדעת. '}
               </Typography>
             </Box>
           </Grid>

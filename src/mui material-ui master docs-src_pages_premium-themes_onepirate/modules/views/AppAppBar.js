@@ -86,12 +86,13 @@ function UserMenu() {
         open={Boolean(anchorElUser)}
         onClose={handleCloseUserMenu}
       >
-        {settings.map((setting) => (
+        {settings.map((setting, i) => (
           <Link
             to={`/${setting.toLowerCase()}`}
             style={CANCEL_A_TAG_DEFAULT_STYLE}
+            key={i}
           >
-            <MenuItem key={setting} onClick={handleCloseUserMenu}>
+            <MenuItem  onClick={handleCloseUserMenu}>
               <Typography textAlign="center">{setting}</Typography>
             </MenuItem>
           </Link>

@@ -9,6 +9,7 @@ import ProductCTA from './modules/views/ProductCTA';
 import AppAppBar from './modules/views/AppAppBar';
 import withRoot from './modules/withRoot';
 import { Course } from '../components/FirebaseContext';
+import Album from './modules/views/Album';
 
 
 function Index() {
@@ -17,17 +18,14 @@ function Index() {
   React.useEffect(()=>{
     Course.getAllCourses().then(data=>setCorselist(data.docs.map(doc=>doc.data())))
   },[])
-  console.log(search);
+  
   
   return (
     <React.Fragment>
       <ProductHero courseList={courseList} search={search} setSearch={setSearch}/>
-      {/* <ProductValues /> */}
-      {/* <ProductCategories /> */}
-      {/* <ProductHowItWorks /> */}
-      {/* <ProductCTA /> */}
-      {/* <ProductSmokingHero /> */}
-      {/* <AppFooter /> */}
+      <ProductValues />
+      <Album courseList={courseList}/>
+      <AppFooter />
 
     </React.Fragment>
   );

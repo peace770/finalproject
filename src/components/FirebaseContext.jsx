@@ -100,9 +100,10 @@ export class Course {
   _chapterArr;
   _isPublished;
   _tags;
+  _description
   isChanged;
 
-  constructor(creator, name, id, tags) {
+  constructor(creator, name, id, tags, description) {
     if (typeof creator === "string") {
       this._creator = creator;
     } else {
@@ -122,6 +123,7 @@ export class Course {
     this._isPublished = false;
     this.isChanged = false;
     this._tags = new Set(tags);
+    this._description = description
   }
 
   // getters
@@ -135,7 +137,12 @@ export class Course {
     return this._id;
   }
 
+  get description(){
+    return this._description;
+  }
+
   //setters
+
   async addTag(newTag) {
     //cheack DB for tags
     this._tags.add(newTag);
@@ -249,7 +256,8 @@ export class Course {
     },
     fromFirestore: (snapshot, options) => {
       const data = snapshot.data(options);
-      return new Course(data.creator, data.name, snapshot.id, data.tags);
+      console.log(data);
+      return new Course(data.creator, data.name, snapshot.id, data.tags, data.description);
     },
   };
 
