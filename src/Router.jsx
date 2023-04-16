@@ -35,10 +35,10 @@ export default function Router() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<h2>About</h2>} />
         <Route path="/*" element={<NotFound404 />} />
-        <Route path="/coursepage/:courseId" element={<></>} />
+
+        <Route path="/landing/:courseId" element={<></>} />
         <Route path="/terms" element={<Terms/>}/>
         <Route path="/privacy" element={<Privacy/>}/>
-
 
         <Route element={<NotSignedOnly />}>
           <Route path="/signin" element={<SignIn />} />
