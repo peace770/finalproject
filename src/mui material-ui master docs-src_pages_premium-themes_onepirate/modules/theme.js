@@ -33,7 +33,7 @@ const rawTheme = createTheme({
     fontSize: 14,
     fontWeightLight: 300, // Work Sans
     fontWeightRegular: 400, // Work Sans
-    fontWeightMedium: 700, // Roboto Condensed
+    fontWeightMedium: 700, // Roboto Condensed    
   },
 });
 

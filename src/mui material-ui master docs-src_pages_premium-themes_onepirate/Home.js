@@ -21,7 +21,6 @@ function Index() {
   
   return (
     <React.Fragment>
-      <AppAppBar />
       <ProductHero courseList={courseList} search={search} setSearch={setSearch}/>
       {/* <ProductValues /> */}
       {/* <ProductCategories /> */}
@@ -29,8 +28,9 @@ function Index() {
       {/* <ProductCTA /> */}
       {/* <ProductSmokingHero /> */}
       {/* <AppFooter /> */}
+
     </React.Fragment>
   );
 }
 
-export default withRoot(Index);
+export default Index;

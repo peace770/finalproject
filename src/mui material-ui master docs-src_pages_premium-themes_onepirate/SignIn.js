@@ -12,11 +12,14 @@ import FormButton from './modules/form/FormButton';
 import FormFeedback from './modules/form/FormFeedback';
 import withRoot from './modules/withRoot';
 import GoogleButton from 'react-google-button';
-import { LoginContext, redirectIfUserIsSignedUp, signInWithGoogle, signInWithPassword } from '../components/FirebaseContext';
+import { LoginContext,  signInWithGoogle, signInWithPassword } from '../components/FirebaseContext';
+import { useNavigate } from 'react-router-dom';
 
 function SignIn() {
   const user = React.useContext(LoginContext);
-  //redirectIfUserIsSignedUp(user);
+
+  let navigate = useNavigate();
+  if (user) navigate('/dashboard');
 
   const [sent, setSent] = React.useState(false);
   const [serverError, setServerError]= React.useState("")
@@ -47,7 +50,6 @@ function SignIn() {
 
   return (
     <React.Fragment>
-      <AppAppBar />
       <AppForm>
         <React.Fragment>
           <Typography variant="h3" gutterBottom marked="center" align="center">
@@ -131,4 +133,4 @@ function SignIn() {
   );
 }
 
-export default withRoot(SignIn);
+export default SignIn;
