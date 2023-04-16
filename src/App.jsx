@@ -10,8 +10,8 @@ import SignUp from './mui material-ui master docs-src_pages_premium-themes_onepi
 import Dashboard from './pages/Dashboard';
 import ForgotPassword from './mui material-ui master docs-src_pages_premium-themes_onepirate/ForgotPassword';
 import Some from './components/Some'
-import View from './pages/View';
 import Router from './Router';
+import withRoot from './mui material-ui master docs-src_pages_premium-themes_onepirate/modules/withRoot';
 // import Album from './pages/Album';
 
 function App() {
@@ -24,4 +24,4 @@ function App() {
   );
 }
 
-export default App;
+export default withRoot(App);

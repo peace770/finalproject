@@ -46,16 +46,25 @@ export async function signInWithPassword(email, password) {
   await signInWithEmailAndPassword(getAuth(), email, password);
 }
 
-export async function SignUpWithEmailAndPassword(firstName, lastName, email, password){
- let userCredential = await createUserWithEmailAndPassword(getAuth(), email, password);
- let user = userCredential.user;
+export async function SignUpWithEmailAndPassword(
+  firstName,
+  lastName,
+  email,
+  password
+) {
+  let userCredential = await createUserWithEmailAndPassword(
+    getAuth(),
+    email,
+    password
+  );
+  let user = userCredential.user;
   await setDoc(doc(db, "users", user.uid), {
-  creator: false,
-  name: {
-    first : firstName,
-    last: lastName
-  }
-});
+    creator: false,
+    name: {
+      first: firstName,
+      last: lastName,
+    },
+  });
 }
 
 // Signs-out .
@@ -68,16 +77,12 @@ export function signOutUser() {
 export function isUserSignedIn() {
   return !!getAuth().currentUser;
 }
-export function redirectIfUserNotSignedUp(user) {
-  if (!user) window.location.href = "www.youtube.com";
-}
-export function redirectIfUserIsSignedUp(user) {
-  if (user) window.location.href = "www.youtube.com";
-}
 
 export default function FirebaseContext({ children }) {
   const [LoginState, setLoginState] = useState(getAuth().currentUser);
-  onAuthStateChanged(getAuth(), (user) => setLoginState(user));
+  onAuthStateChanged(getAuth(), (user) => {
+    setLoginState(user);
+  });
 
   return (
     <LoginContext.Provider value={LoginState}>{children}</LoginContext.Provider>
@@ -105,15 +110,14 @@ export class Course {
     }
     if (typeof name === "string") {
       this._name = name;
+    } else {
+      throw new TypeError("name must be a string");
     }
-    else{
-      throw new TypeError("name must be a string")
+    if (typeof id === "string") {
+      this._id = id;
+    } else {
+      throw new TypeError("id must be astring");
     }
-    if (typeof id === "string"){
-    this._id = id;
-  } else {
-    throw new TypeError ("id must be astring")
-  }
     this._chapterArr = [];
     this._isPublished = false;
     this.isChanged = false;
@@ -121,44 +125,39 @@ export class Course {
   }
 
   // getters
-  get chapters(){
+  get chapters() {
     return this._chapterArr;
   }
-  get name(){
+  get name() {
     return this._name;
   }
-  get id(){
+  get id() {
     return this._id;
   }
 
   //setters
-  async addTag(newTag){
+  async addTag(newTag) {
     //cheack DB for tags
     this._tags.add(newTag);
     this.isChanged = true;
   }
 
   async addNewChapter(name) {
-    let doc = await addDoc(collection(db, "courses", this._id, "chapters"), {
+    let data = {
       name: name,
       position: this.chapterArr.length + 1,
       isPublished: false,
-    });
+    }
+    let doc = await addDoc(collection(db, "courses", this._id, "chapters"), data);
     // create collection of components
-    this.DBaddChapter(name, doc.id);
+    this.DBaddChapter(name, doc.id, data.position);
     return true;
   }
 
-  DBaddChapter(name, id) {
+  DBaddChapter(name, id, position) {
     if (typeof id != typeof "") throw new TypeError("id must be a string");
     this._chapterArr.push(
-      new Chapter(
-        name,
-        this._chapterArr.length + 1,
-        this.registerChange.bind(this),
-        id,
-        this
-      )
+      new Chapter(name, position, this.registerChange.bind(this), id, this)
     );
   }
 
@@ -232,9 +231,10 @@ export class Course {
     const q = query(collection(db, "courses", this._id, "chapters"));
     const chapters = await getDocs(q);
     chapters.forEach((chapter) => {
-      let {name} = chapter.data();
-      this.DBaddChapter(name, chapter.id);
+      let { name, position } = chapter.data();
+      this.DBaddChapter(name, chapter.id, position);
     });
+    this.chapters.sort((a, b) => a.position - b.position);
     return true;
   }
 
@@ -244,7 +244,7 @@ export class Course {
         creator: course._creator,
         name: course._name,
         isPublished: course._isPublished,
-        tags: course._tags
+        tags: course._tags,
       };
     },
     fromFirestore: (snapshot, options) => {
@@ -260,15 +260,33 @@ export class Course {
   }
   static async getCoursesByCreatorId(userId) {
     // return object with all the courses
-    const q = query(collection(db, "courses"), where("creator", "==", userId)).withConverter(Course.Converter);
+    const q = query(
+      collection(db, "courses"),
+      where("creator", "==", userId)
+    ).withConverter(Course.Converter);
     return getDocs(q);
   }
-  
-  static async getCourse(courseId) {
-    const q = query(doc(db, "courses", courseId)).withConverter(Course.Converter);
+  static async getUserCourses(userId) {
+    const q = query(collection(db, "users", userId, "userCourses"));
+    let { docs } = await getDocs(q);
+    let courses = docs.map(async (doc) => {
+      let course = await this.getCourse(doc.id);
+      return Object.assign(course.data(), doc.data());
+    });
+    let result = await Promise.all(courses);
+    return result;
+  }
+
+  static async getUserCourseData(userId, courseId) {
+    const q = doc(db, "users", userId, "userCourses", courseId);
     return getDoc(q);
   }
-  static async buildCourse(courseId){
+
+  static async getCourse(courseId) {
+    const q = doc(db, "courses", courseId).withConverter(Course.Converter);
+    return getDoc(q);
+  }
+  static async buildCourse(courseId) {
     let course = await this.getCourse(courseId);
     course = course.data();
     await course.fill();
@@ -278,7 +296,7 @@ export class Course {
   }
   static async createNewCourse(courseName) {
     if (!getAuth().currentUser) throw new Error("you cant do this!");
-    let data ={
+    let data = {
       name: courseName,
       creator: getAuth().currentUser.uid,
       tags: [],
@@ -373,12 +391,19 @@ export class Chapter {
   get isPublished() {
     return this._isPublished;
   }
-  get components(){
+  get components() {
     return this._componentArr;
   }
 
   //methods
   async addNewComponent(name, type, url) {
+    let data = {
+      name: name,
+      type: type,
+      url: url,
+      position: this._componentArr.length + 1,
+      isPublished: false,
+    };
     let doc = await addDoc(
       collection(
         db,
@@ -388,24 +413,18 @@ export class Chapter {
         this._id,
         "components"
       ),
-      {
-        name: name,
-        type: type,
-        url: url,
-        position: this._componentArr.length + 1,
-        isPublished:  false,
-      }
+      data
     );
-    this.DBaddComponent(name, type, url, doc.id);
+    this.DBaddComponent(name, type, url, doc.id, data.position);
     return true;
   }
 
-  DBaddComponent(name, type, url, id) {
+  DBaddComponent(name, type, url, id, position) {
     if (typeof id === "string") {
       this._componentArr.push(
         new Component(
           name,
-          this._componentArr.length + 1,
+          position,
           type,
           url,
           this.registerComponentChange.bind(this),
@@ -448,8 +467,9 @@ export class Chapter {
     let docs = await getDocs(q);
     docs.forEach((comp) => {
       let data = comp.data();
-      this.DBaddComponent(data.name, data.type, data.url, comp.id);
+      this.DBaddComponent(data.name, data.type, data.url, comp.id, data.position);
     });
+    this.components.sort((a, b) => a.position - b.position);
     return true;
   }
   publish() {
