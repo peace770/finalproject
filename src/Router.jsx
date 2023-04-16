@@ -33,6 +33,8 @@ export default function Router() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<h2>About</h2>} />
         <Route path="/*" element={<NotFound404 />} />
+        <Route path="/landing/:courseId" element={<></>} />
+        
 
         <Route element={<NotSignedOnly />}>
           <Route path="/signin" element={<SignIn />} />
