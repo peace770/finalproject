@@ -15,7 +15,7 @@ export default function SearchBar({courseList, search, setSearch}) {
       if (course) {
         event.preventDefault(); 
         setSearch('');
-        navigate(`coursepage/${course.id}`);
+        navigate(`/landing/${course.id}`);
       }
     }
   };

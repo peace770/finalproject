@@ -16,6 +16,7 @@ import {
 } from "../../../components/FirebaseContext";
 import { Link, Outlet } from "react-router-dom";
 import { CANCEL_A_TAG_DEFAULT_STYLE } from "../../../util";
+import siteLogo from "./siteLogo.jpg";
 
 const rightLink = {
   fontSize: 16,
@@ -36,14 +37,7 @@ function AppAppBar() {
       <AppBar position="fixed">
         <Toolbar sx={{ justifyContent: "space-between" }}>
           <Link to="/" style={CANCEL_A_TAG_DEFAULT_STYLE}>
-            <Typography
-              variant="h6"
-              underline="none"
-              color="inherit"
-              sx={{ fontSize: 24, flex: '1 1 auto' }}
-            >
-              {"onepirate"}
-            </Typography>
+            <img src={siteLogo}  height={60} width={60}/>
           </Link>
           {user ? <UserMenu /> : <SignInUp />}
         </Toolbar>

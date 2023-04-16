@@ -54,7 +54,7 @@ console.log(courseList);
                     </Typography>
                   </CardContent>
                   <CardActions>
-                    <Button size="small"><Link style={CANCEL_A_TAG_DEFAULT_STYLE} to={`/coursepage/${card.id}`}>View</Link></Button>
+                    <Button size="small"><Link style={CANCEL_A_TAG_DEFAULT_STYLE} to={`/landing/${card.id}`}>View</Link></Button>
                   </CardActions>
                 </Card>
               </Grid>
