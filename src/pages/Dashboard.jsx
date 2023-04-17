@@ -28,7 +28,10 @@ export default function Dashboard() {
       res = Course.getCoursesByCreatorId(user.uid);}
     else
       res = Course.getUserCourses(user.uid);
-    res.then((res) => setCourses(res.docs.map(doc => doc.data())));
+    res.then((res) => {
+      console.log(res);
+      setCourses(res.docs ? res.doc.map(doc => doc.data()) : [])});
+    return <h1>Loading</h1>
   }
   console.log(courses);
   return (
