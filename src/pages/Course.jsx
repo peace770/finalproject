@@ -9,39 +9,38 @@ import {
   Course as CourseClass,
   LoginContext,
 } from "../components/FirebaseContext";
+import Editable from "../components/Editable";
 
 export default function Course() {
   const user = React.useContext(LoginContext);
 
   const [course, setCourse] = useState(null);
-  const [userCourseData, setUserCourseData] = useState(null);
   const [currentComponent, setCurrentComponent] = useState(null);
-
   const navigate = useNavigate();
   let { courseId, componentId } = useParams();
 
-  if (!courseId || !componentId) {
-    return <NotFound404 />;
+  if (!courseId) {
+    navigate("/404");
   }
 
   if (!course || courseId != course.id) {
     CourseClass.buildCourse(courseId).then((data) => setCourse(data));
-    if (!user.creator)
-    CourseClass.getUserCourseData(user.uid, courseId).then(data => setUserCourseData(data.data()))
-    return <></>;
+    return <h6>loading</h6>;
+  }
+  if ( !componentId) {
+    componentId = course.chapters[0].components[0].id;
+    navigate(`/course/${courseId}/${componentId}`)
   }
 
   if (!currentComponent || componentId != currentComponent.id) {
     let found = false;
-    course.chapters.forEach((chapter) => {
-      chapter.components.forEach((component) => {
-        if (component.id == componentId) {
-          found = true;
-          setCurrentComponent(component);
-        }
-      });
+    course.componentsIterator((component) => {
+      if (component.id == componentId) {
+        found = true;
+        setCurrentComponent(component);
+      }
     });
-    if (!found) throw new Error("component not found");
+    if (componentId && !found)     navigate("/");
   }
 
   function handleNext() {
@@ -59,12 +58,16 @@ export default function Course() {
     }
   }
 
-  return course ? (
-    <Box sx={{marginTop:'2.5rem'}}>
-      <CourseNavigetionSideMenu course={course} lessonsLearned={userCourseData.lessonsLearned || []} />
+  return  (
+    <Box sx={{ marginTop: "2.5rem" }}>
+      <CourseNavigetionSideMenu
+        course={course}
+        lessonsLearned={[]}
+      />
       {currentComponent ? (
         <>
           <VideoContent videoId={youtube_parser(currentComponent.url)} />
+
           <Box display="flex" justifyContent="center" alignItems="center">
             <Button variant="outlined" onClick={handlePrev}>
               {`<`} Previw
@@ -78,8 +81,6 @@ export default function Course() {
         <></>
       )}
     </Box>
-  ) : (
-    <h1>wait!</h1>
   );
 }
 

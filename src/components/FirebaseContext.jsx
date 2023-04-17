@@ -77,11 +77,24 @@ export function signOutUser() {
 export function isUserSignedIn() {
   return !!getAuth().currentUser;
 }
-
+async function getUserData(userId) {
+  const q = query(doc(db, "users", userId));
+  return await getDoc(q);
+}
 export default function FirebaseContext({ children }) {
   const [LoginState, setLoginState] = useState(getAuth().currentUser);
   onAuthStateChanged(getAuth(), (user) => {
-    setLoginState(user);
+    if (user) {
+      getUserData(user.uid)
+      .then(data => {
+        let ndata = Object.assign(user, data.data());
+        // console.log('old: ', data.data());
+        // console.log('nw: ', ndata);
+        setLoginState(ndata);
+      }
+        )
+    }
+    else setLoginState(user);
   });
 
   return (
@@ -187,7 +200,13 @@ export class Course {
     ];
     this.isChanged = true;
   }
-
+  componentsIterator(callback) {
+    this.chapters.forEach(chapter => {
+      chapter.components.forEach(component => {
+        callback(component)
+      })
+    })
+  }
   async _deleteChapter(index) {
     let chapter = this._chapterArr[index];
     let result = await chapter.deleteAllComponents(true);
@@ -261,11 +280,14 @@ export class Course {
   static async getCoursesByCreatorId(userId) {
     // return object with all the courses
     const q = query(
-      collection(db, "courses"),
-      where("creator", "==", userId)
-    ).withConverter(Course.Converter);
-    return getDocs(q);
+      collection(db, "courses")
+      ,      where("creator", "==", 'reRdWlP1Y1dRapF4uEA57B8lLEZ2')
+    )
+    .withConverter(Course.Converter);
+    let res = await getDocs(q);
+    return res;
   }
+  
   static async getUserCourses(userId) {
     const q = query(collection(db, "users", userId, "userCourses"));
     let { docs } = await getDocs(q);
@@ -323,7 +345,8 @@ export class Chapter {
   isChanged;
   registerChange;
   course;
-
+  extraMark = null;
+  
   constructor(name, position, registerChange, id = "", course) {
     if (typeof id === "string") {
       this._id = id;
@@ -453,6 +476,22 @@ export class Chapter {
     }
     return true;
   }
+  toChange(){
+    let  {name, position, isPublished, } = this;
+    return {name, position, isPublished, };
+  }
+  async saveChanges(changes){
+    for (let key in changes) this[key] = changes[key];
+    let chapterRef = doc(
+      db,
+      "courses",
+      this.course._id,
+      "chapters",
+      this.id
+    ).withConverter(Chapter.Converter);
+    return  updateDoc(chapterRef, this);
+  }
+
   async fill() {
     const q = query(
       collection(
@@ -565,6 +604,7 @@ export class Component {
   isChanged;
   registerChange;
   chapter;
+  extraMark = null;
 
   constructor(name, position, type, url, registerChange, id = "", chapter) {
     if (typeof id === "string") {

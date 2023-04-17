@@ -8,7 +8,7 @@ export default function SignedOnly() {
   const [tries, setTries] = useState(0);
   let navigate = useNavigate();
 
-  if (tries >= 5) {
+  if (tries >= 10) {
     navigate("/signin");
   } else if (!user) {
     setTimeout(() => setTries(tries + 1), 200);

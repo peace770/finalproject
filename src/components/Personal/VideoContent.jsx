@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
 import React, { useEffect, useState } from "react";
+import Editable from "../Editable";
 
 export default function VideoContent({ videoId }) {
   const [videoIdState, setVideoIdState] = useState(videoId);
@@ -47,6 +48,7 @@ export default function VideoContent({ videoId }) {
         justifyContent: "center",
       }}
     >
+      <Editable/>
       {container}
     </Box>
   );

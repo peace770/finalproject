@@ -43,7 +43,7 @@ export default function Router() {
 
         <Route element={<SignedOnly />}>
           <Route path="/dashboard" element={user ? <Dashboard /> : <></>} />
-          <Route path="/course/:courseId/:componentId" element={<Course />} />
+          <Route path="/course/:courseId/:componentId?" element={<Course />} />
           <Route path="/logout" element={<Logout />} />
         </Route>
       </Route>

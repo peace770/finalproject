@@ -19,19 +19,24 @@ import { Link } from "react-router-dom";
 export default function Dashboard() {
   const user = useContext(LoginContext);
 
-  const [courses, setCourses] = useState([]);
+  const [courses, setCourses] = useState(null);
+
+  if (!courses) {
+    let res;
+    if (user.creator){
+      res = Course.getCoursesByCreatorId(user.uid);}
+    else
+      res = Course.getUserCourses(user.uid);
+    res.then((res) => setCourses(res.docs.map(doc => doc.data())));
+  }
   console.log(courses);
-  useEffect(() => {
-    Course.getUserCourses(user.uid).then((res) => setCourses(res));
-  }, []);
-console.log(courses);
   return (
     <Box>
       <Typography variant="h4">My Courses</Typography>
 
       <Container sx={{ py: 8 }} maxWidth="md">
         <Grid container spacing={4}>
-          {courses.map((course, i) => (
+          {courses && courses.length ? courses.map((course, i) => (
             <Grid item key={i}>
               <Card
                 sx={{
@@ -59,11 +64,12 @@ console.log(courses);
                   </Typography>
                 </CardContent>
                 <CardActions>
-                  <Link to={`/course/${course.id}/${course.lastComponent}`}>view</Link>
+                  <Link to={`/course/${course.id}/${course.lastComponent || ""}`}>{user.creator ? 'edit' : 'view'}</Link>
                 </CardActions>
               </Card>
             </Grid>
-          ))}
+          ))
+        : <h1>you have no courses yet!</h1>}
         </Grid>
       </Container>
     </Box>
