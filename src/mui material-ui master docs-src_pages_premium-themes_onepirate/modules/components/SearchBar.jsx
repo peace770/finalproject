@@ -8,10 +8,8 @@ export default function SearchBar({courseList, search, setSearch}) {
   let navigate = useNavigate();
 
   const handleKeyDown = (event) => {
-    console.log(event);
     if (event.key === 'Enter') {
       const course = courseList.find((c) => c.name === event.target.value);
-      console.log(course);
       if (course) {
         event.preventDefault(); 
         setSearch('');

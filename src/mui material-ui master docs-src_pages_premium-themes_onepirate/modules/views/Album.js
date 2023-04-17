@@ -24,7 +24,6 @@ const cards = [1, 2, 3, 4, 5, 6, ];
 const theme = createTheme();
 
 export default function Album({courseList}) {
-console.log(courseList);
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />

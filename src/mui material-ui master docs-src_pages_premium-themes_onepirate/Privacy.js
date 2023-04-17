@@ -7,25 +7,48 @@ import AppAppBar from './modules/views/AppAppBar';
 import AppFooter from './modules/views/AppFooter';
 import withRoot from './modules/withRoot';
 // import privacy from './modules/views/privacy.md';
-const privacy =
-`# Terms and Conditions
+const privacy =`# Privacy Policy
 
-Welcome to our website. If you continue to browse and use this website, you are agreeing to comply with and be bound by the following terms and conditions of use, which together with our privacy policy govern our relationship with you in relation to this website. If you disagree with any part of these terms and conditions, please do not use our website.
+We take your privacy seriously. This policy describes what personal information we collect and how we use it.
 
-## The content of the pages of this website is for your general information and use only. It is subject to change without notice.
+## Information We Collect
 
-## Neither we nor any third parties provide any warranty or guarantee as to the accuracy, timeliness, performance, completeness or suitability of the information and materials found or offered on this website for any particular purpose. You acknowledge that such information and materials may contain inaccuracies or errors and we expressly exclude liability for any such inaccuracies or errors to the fullest extent permitted by law.
+We may collect the following types of personal information:
 
-## Your use of any information or materials on this website is entirely at your own risk, for which we shall not be liable. It shall be your own responsibility to ensure that any products, services or information available through this website meet your specific requirements.
+- Name
+- Email address
 
-## This website contains material which is owned by or licensed to us. This material includes, but is not limited to, the design, layout, look, appearance and graphics. Reproduction is prohibited other than in accordance with the copyright notice, which forms part of these terms and conditions.
+## How We Use Your Information
 
-## Unauthorized use of this website may give rise to a claim for damages and/or be a criminal offense.
+We use your personal information for the following purposes:
 
-## From time to time, this website may also include links to other websites. These links are provided for your convenience to provide further information. They do not signify that we endorse the website(s). We have no responsibility for the content of the linked website(s).
+- To communicate with you
+- To process your orders and payments
+- To provide customer support
+- To improve our services and website
 
-## Your use of this website and any dispute arising out of such use of the website is subject to the laws of israel.
+## Information Sharing and Disclosure
+
+We do not sell, trade, or otherwise transfer your personal information to third parties. However, we may share your information with our service providers who help us with our business operations.
+
+## Data Retention
+
+We will retain your personal information for as long as necessary to fulfill the purposes outlined in this policy, unless a longer retention period is required by law.
+
+## Your Rights
+
+You have the right to:
+
+- Access and request a copy of your personal information
+- Correct any inaccuracies in your personal information
+- Object to the processing of your personal information
+- Request the deletion of your personal information
+
+## Contact Us
+
+If you have any questions or concerns about our privacy policy, please contact us.
 `
+
 function Privacy() {
   return (
     <React.Fragment>

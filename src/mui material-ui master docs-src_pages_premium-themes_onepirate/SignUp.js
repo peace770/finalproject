@@ -42,7 +42,6 @@ function SignUp() {
 
   const handleSubmit = (form) => {
     setSent(true);
-    console.log(form);
     SignUpWithEmailAndPassword(form.firstName, form.lastName ,form.email, form.password)
     .catch((error) =>{
       setErrorMessage(error.code.split("/")[1].replaceAll("-", " "));
