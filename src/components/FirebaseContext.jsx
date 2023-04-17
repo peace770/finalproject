@@ -102,9 +102,14 @@ export default function FirebaseContext({ children }) {
   );
 }
 
-/***** */
-// TODO: delete(0.5), ?flagsOfChange(all)?, finish (course, chapter),
-/****** */
+export async function registerToCourse(courseId, userId){
+  let data ={
+    lastComponent : '',
+    lessonsLearned: []
+  }
+  await setDoc(doc(db, "users", userId, "userCourses", courseId), data);
+  return true;
+}
 
 export class Course {
   _id;
@@ -113,9 +118,10 @@ export class Course {
   _chapterArr;
   _isPublished;
   _tags;
+  _description
   isChanged;
 
-  constructor(creator, name, id, tags) {
+  constructor(creator, name, id, tags, description) {
     if (typeof creator === "string") {
       this._creator = creator;
     } else {
@@ -135,6 +141,7 @@ export class Course {
     this._isPublished = false;
     this.isChanged = false;
     this._tags = new Set(tags);
+    this._description = description
   }
 
   // getters
@@ -148,7 +155,16 @@ export class Course {
     return this._id;
   }
 
+  get description(){
+    return this._description;
+  }
+
+  get creator(){
+    return this._creator;
+  }
+
   //setters
+
   async addTag(newTag) {
     //cheack DB for tags
     this._tags.add(newTag);
@@ -158,7 +174,7 @@ export class Course {
   async addNewChapter(name) {
     let data = {
       name: name,
-      position: this.chapterArr.length + 1,
+      position: this._chapterArr.length + 1,
       isPublished: false,
     }
     let doc = await addDoc(collection(db, "courses", this._id, "chapters"), data);
@@ -268,7 +284,7 @@ export class Course {
     },
     fromFirestore: (snapshot, options) => {
       const data = snapshot.data(options);
-      return new Course(data.creator, data.name, snapshot.id, data.tags);
+      return new Course(data.creator, data.name, snapshot.id, data.tags, data.description);
     },
   };
 
@@ -277,17 +293,17 @@ export class Course {
     const q = query(collection(db, "courses")).withConverter(Course.Converter);
     return getDocs(q);
   }
+
   static async getCoursesByCreatorId(userId) {
     // return object with all the courses
     const q = query(
       collection(db, "courses")
-      ,      where("creator", "==", 'reRdWlP1Y1dRapF4uEA57B8lLEZ2')
+      ,      where("creator", "==", userId)
     )
     .withConverter(Course.Converter);
     let res = await getDocs(q);
     return res;
   }
-  
   static async getUserCourses(userId) {
     const q = query(collection(db, "users", userId, "userCourses"));
     let { docs } = await getDocs(q);
@@ -308,6 +324,7 @@ export class Course {
     const q = doc(db, "courses", courseId).withConverter(Course.Converter);
     return getDoc(q);
   }
+
   static async buildCourse(courseId) {
     let course = await this.getCourse(courseId);
     course = course.data();
@@ -316,6 +333,7 @@ export class Course {
     for (let chapter of course.chapters) await chapter.fill();
     return course;
   }
+
   static async createNewCourse(courseName) {
     if (!getAuth().currentUser) throw new Error("you cant do this!");
     let data = {
@@ -327,6 +345,7 @@ export class Course {
     let doc = await addDoc(collection(db, "courses"), data);
     return new Course(getAuth().currentUser.uid, data.name, doc.id, data.tags);
   }
+
   static async stupidlyDeleteCourse(confirm) {
     if (!confirm) return false;
     while (this._chapterArr.length > 0) {
@@ -459,6 +478,7 @@ export class Chapter {
       throw new TypeError("id must be a string");
     }
   }
+
   async update() {
     if (this.isChanged) {
       let chapterRef = doc(
@@ -476,22 +496,6 @@ export class Chapter {
     }
     return true;
   }
-  toChange(){
-    let  {name, position, isPublished, } = this;
-    return {name, position, isPublished, };
-  }
-  async saveChanges(changes){
-    for (let key in changes) this[key] = changes[key];
-    let chapterRef = doc(
-      db,
-      "courses",
-      this.course._id,
-      "chapters",
-      this.id
-    ).withConverter(Chapter.Converter);
-    return  updateDoc(chapterRef, this);
-  }
-
   async fill() {
     const q = query(
       collection(
@@ -511,6 +515,7 @@ export class Chapter {
     this.components.sort((a, b) => a.position - b.position);
     return true;
   }
+
   publish() {
     this.isPublished = !this._isPublished;
     this.isChanged = true;

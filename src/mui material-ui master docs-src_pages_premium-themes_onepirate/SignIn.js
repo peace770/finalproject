@@ -38,7 +38,6 @@ function SignIn() {
 
   const handleSubmit = (form) => {
     setSent(true);
-    console.log(form);
     signInWithPassword(form.email, form.password)
     .then()
     .catch((error) =>{

@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
 import React from "react";
 import { useContext } from "react";
 import { useEffect } from "react";
@@ -15,6 +15,7 @@ import CardMedia from "@mui/material/CardMedia";
 import Grid from "@mui/material/Grid";
 import Container from "@mui/material/Container";
 import { Link } from "react-router-dom";
+import { CANCEL_A_TAG_DEFAULT_STYLE } from "../util";
 
 export default function Dashboard() {
   const user = useContext(LoginContext);
@@ -36,7 +37,7 @@ export default function Dashboard() {
 
       <Container sx={{ py: 8 }} maxWidth="md">
         <Grid container spacing={4}>
-          {courses && courses.length ? courses.map((course, i) => (
+          {courses.map((course, i) => (
             <Grid item key={i}>
               <Card
                 sx={{
@@ -64,12 +65,11 @@ export default function Dashboard() {
                   </Typography>
                 </CardContent>
                 <CardActions>
-                  <Link to={`/course/${course.id}/${course.lastComponent || ""}`}>{user.creator ? 'edit' : 'view'}</Link>
+                  <Link to={`/course/${course.id}/${course.lastComponent}`}>view</Link>
                 </CardActions>
               </Card>
             </Grid>
-          ))
-        : <h1>you have no courses yet!</h1>}
+          ))}
         </Grid>
       </Container>
     </Box>
