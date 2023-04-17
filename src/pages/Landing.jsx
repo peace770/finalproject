@@ -63,7 +63,7 @@ export default function Landing() {
           <Button variant="contained"  size="large" onClick={handleClick} disabled={alreadyIn}>{buttonText}</Button>
         </Box>
         <Box sx={{m:1}}>
-          <Link to="/course/:courseId/:componentId" style={ CANCEL_A_TAG_DEFAULT_STYLE}><Button variant="contained" size="large" onClick={handleClick} disabled={!alreadyIn}>נתחיל ללמוד</Button></Link>
+          <Link to={`/course/${courseId}`} style={ CANCEL_A_TAG_DEFAULT_STYLE}><Button variant="contained" size="large" onClick={handleClick} disabled={!alreadyIn}>נתחיל ללמוד</Button></Link>
         </Box>
       </Grid>
     </Grid>

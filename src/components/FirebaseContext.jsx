@@ -90,13 +90,9 @@ export default function FirebaseContext({ children }) {
 }
 
 export async function registerToCourse(courseId, userId){
-  var lastC;
-  await Course.buildCourse(courseId).then((data) =>{
-    lastC = data._chapterArr[0]._componentArr[0].id
-  });
   let data ={
-    lastComponent : lastC,
-    lessonsLearned: [lastC]
+    lastComponent : '',
+    lessonsLearned: []
   }
   await setDoc(doc(db, "users", userId, "userCourses", courseId), data);
   return true;
