@@ -36,8 +36,12 @@ export default function Landing() {
         }
     }, [courseId, userId]);
     
-    const handleClick = ((event)=>{
-      var res = registerToCourse(courseId, userId);
+    const handleClick = (()=>{
+      var res = registerToCourse(courseId, userId)
+      .catch((error)=>{
+        alert("Houston ... we've had a problem here");
+        console.log(error);
+      });
       if (res === true){
         setAlreadyIn(true);
         Course.getUserCourseData(courseId, userId).then(data => setUserCourseData(data.data()));
