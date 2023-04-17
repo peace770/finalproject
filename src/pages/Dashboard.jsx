@@ -32,9 +32,19 @@ export default function Dashboard() {
   }
   console.log(courses);
   return (
+    <>
+    {(courses.length === 0)
+    ?
     <Box>
       <Typography variant="h4">My Courses</Typography>
 
+      <Typography variant="body1">הממ.. נראה שאין לך קורסים, אתה יכול לחפש קורסים שמתאימים לך בדף הבית</Typography>
+            
+      <Link to="/" style={CANCEL_A_TAG_DEFAULT_STYLE}><Button variant="outlined">find course</Button></Link>
+    </Box>
+    :
+    <Box>
+      <Typography variant="h4">My Courses</Typography>
       <Container sx={{ py: 8 }} maxWidth="md">
         <Grid container spacing={4}>
           {courses.map((course, i) => (
@@ -72,6 +82,9 @@ export default function Dashboard() {
           ))}
         </Grid>
       </Container>
-    </Box>
+     
+    </Box>}
+     
+    </>
   );
 }
