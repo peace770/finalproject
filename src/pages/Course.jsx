@@ -1,23 +1,45 @@
-import { Box, Button } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import CourseNavigetionSideMenu from "../components/CourseNavigetionSideMenu";
 // import { Course as CourseClass } from "../components/FirebaseContext";
 import { useHref, useNavigate, useParams } from "react-router-dom";
 import VideoContent from "../components/Personal/VideoContent";
-import NotFound404 from "./NotFound404";
 import {
   Course as CourseClass,
   LoginContext,
+  saveLastComponent,
 } from "../components/FirebaseContext";
-import Editable from "../components/Editable";
+import ContentFactory from "../components/Personal/ContentFactory";
 
 export default function Course() {
   const user = React.useContext(LoginContext);
 
   const [course, setCourse] = useState(null);
   const [currentComponent, setCurrentComponent] = useState(null);
+  const [currentComponentId, setCurrentComponentId] = useState("");
   const navigate = useNavigate();
   let { courseId, componentId } = useParams();
+
+  useEffect(() => {
+    if (
+      course &&
+      typeof currentComponentId == typeof "" &&
+      currentComponentId.length > 0
+    ) {
+      course.componentsIterator((component) => {
+        if (component.id == currentComponentId) {
+          setCurrentComponent(component);
+        }
+      });
+    }
+  }, [currentComponentId, course]);
+  useEffect(() => {
+    if (!user.creator && currentComponent)
+      saveLastComponent(
+        currentComponent.chapter.course.id,
+        currentComponent.id
+      );
+  }, [currentComponent]);
 
   if (!courseId) {
     navigate("/404");
@@ -27,21 +49,8 @@ export default function Course() {
     CourseClass.buildCourse(courseId).then((data) => setCourse(data));
     return <h6>loading</h6>;
   }
-  if ( !componentId) {
-    componentId = course.chapters[0].components[0].id;
-    navigate(`/course/${courseId}/${componentId}`)
-  }
 
-  if (!currentComponent || componentId != currentComponent.id) {
-    let found = false;
-    course.componentsIterator((component) => {
-      if (component.id == componentId) {
-        found = true;
-        setCurrentComponent(component);
-      }
-    });
-    if (componentId && !found)     navigate("/");
-  }
+  if (componentId != currentComponentId) setCurrentComponentId(componentId);
 
   function handleNext() {
     let next = getNextComponent(currentComponent);
@@ -57,23 +66,29 @@ export default function Course() {
       navigate(newUrl);
     }
   }
-
-  return  (
-    <Box sx={{ marginTop: "2.5rem" }}>
-      <CourseNavigetionSideMenu
-        course={course}
-        lessonsLearned={[]}
-      />
+  return (
+    <Box sx={{ marginTop: "1.5rem" }}>
+      <Typography component="h1" variant="h4" align="" margin="1rem">
+        {course.name}
+      </Typography>
+      <CourseNavigetionSideMenu course={course} lessonsLearned={[]} />
       {currentComponent ? (
         <>
-          <VideoContent videoId={youtube_parser(currentComponent.url)} />
+          <Typography component="h4" variant="h4" align="center" margin="">
+            {currentComponent.name}
+          </Typography>
 
+          <ContentFactory
+            type={currentComponent.type}
+            content={currentComponent.content}
+            url={currentComponent.url}
+          />
           <Box display="flex" justifyContent="center" alignItems="center">
             <Button variant="outlined" onClick={handlePrev}>
-              {`<`} Previw
+              {`<`} הקודם
             </Button>
             <Button variant="outlined" onClick={handleNext}>
-              Next {`>`}
+              הבא {`>`}
             </Button>
           </Box>
         </>
@@ -102,10 +117,4 @@ function getNextComponent(current) {
   });
   let nextIndex = arr.indexOf(current) + 1;
   return arr[nextIndex];
-}
-
-function youtube_parser(url) {
-  var regExp = /.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#\&\?]*).*/;
-  var match = url.match(regExp);
-  return match && match[1].length == 11 ? match[1] : false;
 }

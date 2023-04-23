@@ -17,7 +17,7 @@ import AppAppBar from "./mui material-ui master docs-src_pages_premium-themes_on
 import Logout from "./pages/Logout";
 import SignedOnly from "./components/SignedOnly";
 import NotSignedOnly from "./components/NotSignedOnly";
-import Landing from "./pages/landing"
+import Landing from "./pages/Landing"
 
 export default function Router() {
   const user = useContext(LoginContext);

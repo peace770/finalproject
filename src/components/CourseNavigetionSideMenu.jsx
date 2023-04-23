@@ -15,7 +15,7 @@ import { Course, LoginContext } from "./FirebaseContext";
 import EditIcon from "@mui/icons-material/Edit";
 import Button from "@mui/material/Button";
 import FormDialog from './FormDialog'
-
+import AddIcon from '@mui/icons-material/Add';
 
 
 
@@ -42,11 +42,14 @@ export default function CourseNavigetionSideMenu({ course,  }) {
   function chapterAddOn(chapter) {
     if (user.creator) {
       return (
+        <>
         <Button onClick={() => editChapter(chapter)}>
-          {/* <Icon sx={{}}> */}
             <EditIcon />
-          {/* </Icon> */}
         </Button>
+        <Button onClick={() => chapter.new()}>
+            <AddIcon/>
+        </Button>
+        </>
       );
     } else {
       return <></>;
@@ -69,7 +72,8 @@ export default function CourseNavigetionSideMenu({ course,  }) {
       component="nav"
       subheader={
         <ListSubheader component="div" id="nested-list-subheader">
-          {course.name}
+          ניווט בקורס
+          {chapterAddOn(course)}
         </ListSubheader>
       }
     >

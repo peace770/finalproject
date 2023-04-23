@@ -2,16 +2,19 @@ import { Box } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import Editable from "../Editable";
 
-export default function VideoContent({ videoId }) {
+export default function VideoContent({ videoId , frameId = `${Math.random()}`}) {
   const [videoIdState, setVideoIdState] = useState(videoId);
   const [videoFrame, setvideoFrame] = useState('<div id="pppppppppp"></div>');
 
   let key = "AIzaSyACfe4ntiPnLXFTvUkNbnH2fpv47Br_-ig";
 
   function resizeIframe() {
-    let arr = document.getElementsByTagName("iframe");
+    //let arr = document.getElementById(frameId).getElementById("iframe");
+    const myDiv = document.getElementById(frameId);
+    const iframes = myDiv.getElementsByTagName('iframe');
+
     let size = 50;
-    for (let obj of arr) {
+    for (let obj of iframes) {
       let r = obj.height / obj.width;
       obj.style.height = `${r * size}vw`;
       obj.style.width = `${size}vw`;
@@ -36,7 +39,7 @@ export default function VideoContent({ videoId }) {
 
   let container = (
     <div
-      id={`${videoId}`}
+      id={frameId}
       dangerouslySetInnerHTML={{ __html: videoFrame }}
     ></div>
   );
@@ -48,7 +51,6 @@ export default function VideoContent({ videoId }) {
         justifyContent: "center",
       }}
     >
-      <Editable/>
       {container}
     </Box>
   );

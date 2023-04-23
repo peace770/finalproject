@@ -23,6 +23,7 @@ import {
   deleteDoc,
   setDoc,
   getDoc,
+  arrayUnion,
 } from "firebase/firestore";
 
 const urlRegex = /^(?:(?:https?|ftp):\/\/)?(?:\S+(?::\S*)?@)?(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|(?:[a-z0-9-]+\.)+[a-z]{2,})(?::\d{2,5})?(?:\/\S*)?$/i;
@@ -81,20 +82,21 @@ async function getUserData(userId) {
   const q = query(doc(db, "users", userId));
   return await getDoc(q);
 }
+export async function saveLastComponent(courseId, componentId) {
+  await updateDoc(doc(db, "users", getAuth().currentUser.uid, "userCourses", courseId), {lastComponent:componentId, 
+    lessonsLearned: arrayUnion(componentId)});
+}
 export default function FirebaseContext({ children }) {
   const [LoginState, setLoginState] = useState(getAuth().currentUser);
   onAuthStateChanged(getAuth(), (user) => {
     if (user) {
-      getUserData(user.uid)
-      .then(data => {
+      getUserData(user.uid).then((data) => {
         let ndata = Object.assign(user, data.data());
         // console.log('old: ', data.data());
         // console.log('nw: ', ndata);
         setLoginState(ndata);
-      }
-        )
-    }
-    else setLoginState(user);
+      });
+    } else setLoginState(user);
   });
 
   return (
@@ -102,11 +104,11 @@ export default function FirebaseContext({ children }) {
   );
 }
 
-export async function registerToCourse(courseId, userId){
-  let data ={
-    lastComponent : '',
-    lessonsLearned: []
-  }
+export async function registerToCourse(courseId, userId) {
+  let data = {
+    lastComponent: "",
+    lessonsLearned: [],
+  };
   await setDoc(doc(db, "users", userId, "userCourses", courseId), data);
   return true;
 }
@@ -118,10 +120,10 @@ export class Course {
   _chapterArr;
   _isPublished;
   _tags;
-  _description
+  _description;
   isChanged;
 
-  constructor(creator, name, id, tags, description) {
+  constructor(creator, name, id, isPublished, tags, description) {
     if (typeof creator === "string") {
       this._creator = creator;
     } else {
@@ -138,10 +140,10 @@ export class Course {
       throw new TypeError("id must be astring");
     }
     this._chapterArr = [];
-    this._isPublished = false;
+    this._isPublished = isPublished;
     this.isChanged = false;
     this._tags = new Set(tags);
-    this._description = description
+    this._description = description;
   }
 
   // getters
@@ -155,15 +157,38 @@ export class Course {
     return this._id;
   }
 
-  get description(){
+  get description() {
     return this._description;
   }
 
-  get creator(){
+  get creator() {
     return this._creator;
   }
 
   //setters
+  set name(newName) {
+    if (typeof newName === "string") {
+      this._name = newName;
+      this.isChanged = true;
+      this.registerChange();
+    } else {
+      throw new TypeError("name must be a string");
+    }
+  }
+  set description(newDescription) {
+    if (typeof newDescription === "string") {
+      this._description = newDescription;
+      this.isChanged = true;
+      this.registerChange();
+    } else {
+      throw new TypeError("description must be a string");
+    }
+  }
+  set isPublished(status) {
+    this._isPublished = status;
+    this.isChanged = true;
+    this.registerChange();
+  }
 
   async addTag(newTag) {
     //cheack DB for tags
@@ -176,17 +201,54 @@ export class Course {
       name: name,
       position: this._chapterArr.length + 1,
       isPublished: false,
-    }
-    let doc = await addDoc(collection(db, "courses", this._id, "chapters"), data);
+    };
+    let doc = await addDoc(
+      collection(db, "courses", this._id, "chapters"),
+      data
+    );
     // create collection of components
-    this.DBaddChapter(name, doc.id, data.position);
+    this.DBaddChapter(name, doc.id, data.position, data.isPublished);
     return true;
   }
 
-  DBaddChapter(name, id, position) {
+  toChange() {
+    return {
+      name: {
+        type: typeof '',
+        onChange: (e) => {
+          this.name = e.target.value;
+        },
+      },
+      description: {
+        type: typeof '',
+        onChange: (e) => {
+          this.description = e.target.value;
+        },
+      },
+      isPublished: {
+        type: "option",
+        options: [`${true}`, `${false}`],
+        onChange: (e) => {
+          this.publish();
+          // = e.target.value == `${true}`
+        },
+      },
+    };
+  }
+  saveChanges(data) {
+    return this.update();
+  }
+  DBaddChapter(name, id, position, isPublished) {
     if (typeof id != typeof "") throw new TypeError("id must be a string");
     this._chapterArr.push(
-      new Chapter(name, position, this.registerChange.bind(this), id, this)
+      new Chapter(
+        name,
+        position,
+        this.registerChange.bind(this),
+        id,
+        this,
+        isPublished
+      )
     );
   }
 
@@ -202,7 +264,7 @@ export class Course {
 
   reorder(index, direction) {
     //asumming that postion 1 is the topmost and n-1 is the lowest position
-    var other = direction == `down` ? index + 1 : index - 1;
+    var other = index + direction;
     if (other < 0 || other >= this._chapterArr.length) {
       return;
     }
@@ -217,15 +279,16 @@ export class Course {
     this.isChanged = true;
   }
   componentsIterator(callback) {
-    this.chapters.forEach(chapter => {
-      chapter.components.forEach(component => {
-        callback(component)
-      })
-    })
+    this.chapters.forEach((chapter) => {
+      chapter.components.forEach((component) => {
+        callback(component);
+      });
+    });
   }
   async _deleteChapter(index) {
     let chapter = this._chapterArr[index];
     let result = await chapter.deleteAllComponents(true);
+    console.log(result);
     if (!result) return false;
     await deleteDoc(doc(db, "courses", this._id, "chapters", chapter._id));
     this._chapterArr.splice(index, 1);
@@ -236,24 +299,31 @@ export class Course {
     return true;
   }
 
-  delete(index, confirm) {
+  deleteChapter(index, confirm) {
     //prompt(`deleteing is permanent and cannot be recovered, you can unpublish content instead. are you sure you want to delete?`)
     if (index < 0 || index >= this._chapterArr.length) {
       alert("trying to remove a nonIndex");
       return;
     }
     if (confirm == true) {
-      this._deleteChapter(index);
+      return this._deleteChapter(index);
     } else {
       this._chapterArr[index].isPublished = false;
     }
+  }
+
+  new() {
+    return this.addNewChapter("new");
+  }
+  delete() {
+    return this.stupidlyDeleteCourse(true);
   }
   async update() {
     if (this.isChanged) {
       let courseRef = doc(db, "courses", this._id).withConverter(
         Course.Converter
       );
-      await updateDoc(courseRef, this);
+      await setDoc(courseRef, this);
       for (let chapter of this._chapterArr) {
         await chapter.update();
       }
@@ -266,8 +336,9 @@ export class Course {
     const q = query(collection(db, "courses", this._id, "chapters"));
     const chapters = await getDocs(q);
     chapters.forEach((chapter) => {
-      let { name, position } = chapter.data();
-      this.DBaddChapter(name, chapter.id, position);
+      let { name, position, isPublished } = chapter.data();
+      console.log(chapter.data());
+      this.DBaddChapter(name, chapter.id, position, isPublished);
     });
     this.chapters.sort((a, b) => a.position - b.position);
     return true;
@@ -279,12 +350,20 @@ export class Course {
         creator: course._creator,
         name: course._name,
         isPublished: course._isPublished,
-        tags: course._tags,
+        tags: [...course._tags],
+        description: course._description,
       };
     },
     fromFirestore: (snapshot, options) => {
       const data = snapshot.data(options);
-      return new Course(data.creator, data.name, snapshot.id, data.tags, data.description);
+      return new Course(
+        data.creator,
+        data.name,
+        snapshot.id,
+        data.isPublished,
+        data.tags,
+        data.description
+      );
     },
   };
 
@@ -297,10 +376,9 @@ export class Course {
   static async getCoursesByCreatorId(userId) {
     // return object with all the courses
     const q = query(
-      collection(db, "courses")
-      ,      where("creator", "==", userId)
-    )
-    .withConverter(Course.Converter);
+      collection(db, "courses"),
+      where("creator", "==", userId)
+    ).withConverter(Course.Converter);
     let res = await getDocs(q);
     return res;
   }
@@ -341,12 +419,20 @@ export class Course {
       creator: getAuth().currentUser.uid,
       tags: [],
       isPublished: false,
+      description: '',
     };
     let doc = await addDoc(collection(db, "courses"), data);
-    return new Course(getAuth().currentUser.uid, data.name, doc.id, data.tags);
+    return new Course(
+      getAuth().currentUser.uid,
+      data.name,
+      doc.id,
+      data.isPublished,
+      data.tags,
+      data.description
+    );
   }
 
-  static async stupidlyDeleteCourse(confirm) {
+  async stupidlyDeleteCourse(confirm) {
     if (!confirm) return false;
     while (this._chapterArr.length > 0) {
       await this._deleteChapter(this._chapterArr.length - 1);
@@ -365,8 +451,8 @@ export class Chapter {
   registerChange;
   course;
   extraMark = null;
-  
-  constructor(name, position, registerChange, id = "", course) {
+
+  constructor(name, position, registerChange, id = "", course, isPublished) {
     if (typeof id === "string") {
       this._id = id;
     } else {
@@ -388,7 +474,7 @@ export class Chapter {
       throw new TypeError("coursee must be a object (instance of Course)");
     }
     this._componentArr = [];
-    this._isPublished = false;
+    this._isPublished = isPublished;
     this.isChanged = false;
     this.registerChange = registerChange;
   }
@@ -457,12 +543,20 @@ export class Chapter {
       ),
       data
     );
-    this.DBaddComponent(name, type, url, doc.id, data.position);
+    this.DBaddComponent(
+      name,
+      type,
+      url,
+      doc.id,
+      data.position,
+      data.isPublished
+    );
     return true;
   }
 
-  DBaddComponent(name, type, url, id, position) {
+  DBaddComponent(name, type, url, id, position, isPublished) {
     if (typeof id === "string") {
+      console.log(name, type, url, id, position);
       this._componentArr.push(
         new Component(
           name,
@@ -471,14 +565,20 @@ export class Chapter {
           url,
           this.registerComponentChange.bind(this),
           id,
-          this
+          this,
+          isPublished
         )
       );
     } else {
       throw new TypeError("id must be a string");
     }
   }
-
+  delete() {
+    return this.course.deleteChapter(this.position - 1, true);
+  }
+  new() {
+    return this.addNewComponent("new component", "video", "");
+  }
   async update() {
     if (this.isChanged) {
       let chapterRef = doc(
@@ -488,7 +588,7 @@ export class Chapter {
         "chapters",
         this.id
       ).withConverter(Chapter.Converter);
-      await updateDoc(chapterRef, this);
+      await setDoc(chapterRef, this);
       for (let comp of this._componentArr) {
         await comp.update();
       }
@@ -510,7 +610,14 @@ export class Chapter {
     let docs = await getDocs(q);
     docs.forEach((comp) => {
       let data = comp.data();
-      this.DBaddComponent(data.name, data.type, data.url, comp.id, data.position);
+      this.DBaddComponent(
+        data.name,
+        data.type,
+        data.url,
+        comp.id,
+        data.position,
+        data.isPublished
+      );
     });
     this.components.sort((a, b) => a.position - b.position);
     return true;
@@ -531,7 +638,7 @@ export class Chapter {
 
   reorder(index, direction) {
     //asumming that postion 1 is the topmost and n-1 is the lowest position
-    var other = direction == `down` ? index + 1 : index - 1;
+    var other = index + direction;
     if (other < 0 || other >= this._componentArr.length) {
       alert("change out of bounds");
       return;
@@ -577,23 +684,53 @@ export class Chapter {
     }
     return false;
   }
-  delete(index, confirm) {
+
+  toChange() {
+    return {
+      name: {
+        type: typeof this.name,
+        onChange: (e) => {
+          this.name = e.target.value;
+        },
+      },
+      position: {
+        type: typeof this.position,
+        onChange: (e) => {
+          let dir = e.target.value - this.position;
+          this.course.reorder(this.position - 1, dir);
+        },
+      },
+      isPublished: {
+        type: "option",
+        options: [`${true}`, `${false}`],
+        onChange: (e) => {
+          this.publish();
+          // = e.target.value == `${true}`
+        },
+      },
+    };
+  }
+  saveChanges(data) {
+    return this.course.update();
+  }
+  deleteComponent(index, confirm) {
     if (index < 0 || index >= this._componentArr.length) {
       alert("trying to remove a nonIndex");
       return;
     }
     if (confirm == true) {
-      this._deleteComponent(index);
+      return this._deleteComponent(index);
     } else {
       this._componentArr[index].isPublished = false;
     }
   }
+
   static Converter = {
     toFirestore: (chapter) => {
       return {
-        name: chapter._name,
-        position: chapter._position,
-        isPublished: chapter._isPublished,
+        name: chapter.name,
+        position: chapter.position,
+        isPublished: chapter.isPublished,
       };
     },
   };
@@ -611,7 +748,16 @@ export class Component {
   chapter;
   extraMark = null;
 
-  constructor(name, position, type, url, registerChange, id = "", chapter) {
+  constructor(
+    name,
+    position,
+    type,
+    url,
+    registerChange,
+    id = "",
+    chapter,
+    isPublished
+  ) {
     if (typeof id === "string") {
       this._id = id;
     } else {
@@ -632,7 +778,7 @@ export class Component {
     } else {
       throw new TypeError("type must be a string");
     }
-    if (urlRegex.test(url)) {
+    if (urlRegex.test(url) || true) {
       this._url = url;
     } else {
       throw new Error("URL is invalid");
@@ -642,7 +788,7 @@ export class Component {
     } else {
       throw new TypeError("chapter must be a object (instance of Chapter)");
     }
-    this._isPublished = false;
+    this._isPublished = isPublished;
     this.isChanged = false;
     this.registerChange = registerChange;
   }
@@ -736,7 +882,9 @@ export class Component {
     this.isChanged = true;
     this.registerChange();
   }
-
+  delete() {
+    return this.chapter.deleteComponent(this.position - 1, true);
+  }
   async update() {
     if (this.isChanged) {
       let compRef = doc(
@@ -748,20 +896,60 @@ export class Component {
         "components",
         this._id
       ).withConverter(Component.Converter);
-      await updateDoc(compRef, this);
+      await setDoc(compRef, this);
       this.isChanged = false;
     }
     return true;
   }
+  toChange() {
+    return {
+      name: {
+        type: typeof this.name,
+        onChange: (e) => {
+          this.name = e.target.value;
+        },
+      },
+      position: {
+        type: typeof this.position,
+        onChange: (e) => {
+          let dir = e.target.value - this.position;
+          this.chapter.reorder(this.position - 1, dir);
+        },
+      },
+      type: {
+        type: "option",
+        options: ["video"],
+        onChange: (e) => {
+          this.type = e.target.value;
+        },
+      },
+      url: {
+        type: typeof this.url,
+        onChange: (e) => {
+          this.url = e.target.value;
+        },
+      },
+      isPublished: {
+        type: "option",
+        options: [`${true}`, `${false}`],
+        onChange: (e) => {
+          this.isPublished = e.target.value == `${true}`;
+        },
+      },
+    };
+  }
+  saveChanges(data) {
+    return this.chapter.course.update();
+  }
 
   static Converter = {
-    toFirestore: (chapter) => {
+    toFirestore: (component) => {
       return {
-        name: this._name,
-        position: this._position,
-        type: this._type,
-        type: this._url,
-        isPublished: this._isPublished,
+        name: component._name,
+        position: component._position,
+        type: component._type,
+        url: component._url,
+        isPublished: component._isPublished,
       };
     },
   };
