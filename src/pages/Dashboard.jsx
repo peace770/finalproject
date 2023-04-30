@@ -35,8 +35,8 @@ export default function Dashboard() {
 
   console.log(courses);
   return (
-    <>
-      <Typography variant="h4">My Courses</Typography>
+    <Box py={'5vh'} px={'5vw'}>
+      <Typography variant="h4" gutterBottom={true}>My Courses</Typography>
       {user.creator ? <Button onClick={handleCreateCourse}>create new course</Button> : <></> }
       {courses.length === 0 ? (
         <Box>
@@ -57,15 +57,15 @@ export default function Dashboard() {
         </Box>
       ) : (
         <Box>
-          <Container sx={{ py: 8 }} maxWidth="md">
-            <Grid container spacing={4}>
+          <Container sx={{marginInlineStart:'0em' }} maxWidth="sm" disableGutters>
+            <Grid container spacing={4} flexDirection={'column'}>
               {courses.map((course, i) => (
-                <Grid item key={i}>
+                <Grid item key={i} >
                   <Card
                     sx={{
                       height: "150px",
                       display: "flex",
-                      flexDirection: "row",
+                      // flexDirection: "row",
                       flexWrap: "nowrap",
                     }}
                   >
@@ -102,7 +102,7 @@ export default function Dashboard() {
           </Container>
         </Box>
       )}
-    </>
+    </Box>
   );
 }
 function handleCreateCourse() {

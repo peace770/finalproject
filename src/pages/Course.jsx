@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Container, Grid, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import CourseNavigetionSideMenu from "../components/CourseNavigetionSideMenu";
 // import { Course as CourseClass } from "../components/FirebaseContext";
@@ -67,35 +67,41 @@ export default function Course() {
     }
   }
   return (
-    <Box sx={{ marginTop: "1.5rem" }}>
-      <Typography component="h1" variant="h4" align="" margin="1rem">
-        {course.name}
-      </Typography>
-      <CourseNavigetionSideMenu course={course} lessonsLearned={[]} />
-      {currentComponent ? (
-        <>
-          <Typography component="h4" variant="h4" align="center" margin="">
-            {currentComponent.name}
-          </Typography>
+    <Grid container sx={{ marginTop: "1.5rem" }}>
+      <Grid item xs={12}>
+        <Typography component="h1" variant="h4" align="" margin="1rem">
+          {course.name}
+        </Typography>
+      </Grid>
+      <Grid item xs={3} sm={3} >
+        <CourseNavigetionSideMenu course={course} lessonsLearned={[]} />
+      </Grid>{" "}
+      <Grid item mx={'auto'} xs={12} sm={9}>
+        {currentComponent ? (
+          <>
+            <Typography component="h4" variant="h4" align="center" margin="">
+              {currentComponent.name}
+            </Typography>
 
-          <ContentFactory
-            type={currentComponent.type}
-            content={currentComponent.content}
-            url={currentComponent.url}
-          />
-          <Box display="flex" justifyContent="center" alignItems="center">
-            <Button variant="outlined" onClick={handlePrev}>
-              {`<`} הקודם
-            </Button>
-            <Button variant="outlined" onClick={handleNext}>
-              הבא {`>`}
-            </Button>
-          </Box>
-        </>
-      ) : (
-        <></>
-      )}
-    </Box>
+            <ContentFactory
+              type={currentComponent.type}
+              content={currentComponent.content}
+              url={currentComponent.url}
+            />
+            <Box display="flex" justifyContent="center" alignItems="center">
+              <Button variant="outlined" onClick={handlePrev}>
+                {`<`} הקודם
+              </Button>
+              <Button variant="outlined" onClick={handleNext}>
+                הבא {`>`}
+              </Button>
+            </Box>
+          </>
+        ) : (
+          <></>
+        )}
+      </Grid>
+    </Grid>
   );
 }
 

@@ -13,7 +13,7 @@ export default function VideoContent({ videoId , frameId = `${Math.random()}`}) 
     const myDiv = document.getElementById(frameId);
     const iframes = myDiv.getElementsByTagName('iframe');
 
-    let size = 50;
+    let size = 66;
     for (let obj of iframes) {
       let r = obj.height / obj.width;
       obj.style.height = `${r * size}vw`;

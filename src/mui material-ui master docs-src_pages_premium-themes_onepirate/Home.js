@@ -25,8 +25,6 @@ function Index() {
       <ProductHero courseList={courseList} search={search} setSearch={setSearch}/>
       <ProductValues />
       <Album courseList={courseList}/>
-      <AppFooter />
-
     </React.Fragment>
   );
 }

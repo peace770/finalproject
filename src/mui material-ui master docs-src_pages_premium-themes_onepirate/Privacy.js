@@ -60,7 +60,6 @@ function Privacy() {
           <Markdown>{privacy}</Markdown>
         </Box>
       </Container>
-      <AppFooter />
     </React.Fragment>
   );
 }

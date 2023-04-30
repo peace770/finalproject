@@ -28,6 +28,9 @@ export default function Album({courseList}) {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <main>
+      <Typography variant="h3" sx={{mt:'1em'}} gutterBottom={false}>
+        הקורסים שלנו
+      </Typography>
         <Container sx={{ py: 8 }} maxWidth="md">
           <Grid container spacing={4}>
             {courseList.map((card, i) => (

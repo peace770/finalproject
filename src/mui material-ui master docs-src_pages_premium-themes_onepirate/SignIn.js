@@ -127,7 +127,6 @@ function SignIn() {
          */}
       <GoogleButton style={{margin:'auto'}} onClick={signInWithGoogle}/>
       </AppForm>
-      <AppFooter />
     </React.Fragment>
   );
 }

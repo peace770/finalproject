@@ -33,19 +33,17 @@ function AppAppBar() {
   let user = React.useContext(LoginContext);
 
   return (
-    <div>
+    <>
       <AppBar position="fixed">
         <Toolbar sx={{ justifyContent: "space-between" }}>
           <Link to="/" style={CANCEL_A_TAG_DEFAULT_STYLE}>
-            <img src={siteLogo}  height={60} width={60}/>
+            <img src={siteLogo} height={60} width={60} />
           </Link>
           {user ? <UserMenu /> : <SignInUp />}
         </Toolbar>
       </AppBar>
       <Toolbar />
-
-      <Outlet />
-    </div>
+    </>
   );
 }
 function UserMenu() {
@@ -58,7 +56,7 @@ function UserMenu() {
     setAnchorElUser(null);
   };
   return (
-    <Box sx={{ }}>
+    <Box sx={{}}>
       <Tooltip title="Open settings">
         <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
           <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
@@ -86,7 +84,7 @@ function UserMenu() {
             style={CANCEL_A_TAG_DEFAULT_STYLE}
             key={i}
           >
-            <MenuItem  onClick={handleCloseUserMenu}>
+            <MenuItem onClick={handleCloseUserMenu}>
               <Typography textAlign="center">{setting}</Typography>
             </MenuItem>
           </Link>
@@ -98,7 +96,7 @@ function UserMenu() {
 
 function SignInUp() {
   return (
-    <Box sx={{  display: "flex", justifyContent: "flex-end" }}>
+    <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
       <Link to={"/signin"} style={CANCEL_A_TAG_DEFAULT_STYLE}>
         <Typography
           color="inherit"

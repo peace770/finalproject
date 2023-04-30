@@ -41,7 +41,6 @@ function Terms() {
           <Markdown>{terms}</Markdown>
         </Box>
       </Container>
-      <AppFooter />
     </React.Fragment>
   );
 }
