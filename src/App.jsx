@@ -15,13 +15,18 @@ import withRoot from './mui material-ui master docs-src_pages_premium-themes_one
 // import Album from './pages/Album';
 
 function App() {
-  return (
-    <FirebaseContext>
-    <div className="App" dir='rtl'>
-      <Router/>
-    </div>
-    </FirebaseContext>
-  );
+  try {
+    return (
+      <FirebaseContext>
+        <div className="App" dir="rtl">
+          <Router />
+        </div>
+      </FirebaseContext>
+    );
+  } catch (error) {
+    console.log(error);
+    return "sorry, we have a problem";
+  }
 }
 
 export default withRoot(App);
