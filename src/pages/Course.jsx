@@ -46,8 +46,9 @@ export default function Course() {
   }
 
   if (!course || courseId != course.id) {
-    CourseClass.buildCourse(courseId).then((data) => setCourse(data));
-    return <h6>loading</h6>;
+    CourseClass.buildCourse(courseId).then((data) => setCourse(data))
+    .catch(() => navigate('/404'));
+    return <h1>טוען קורס</h1>;
   }
 
   if (componentId != currentComponentId) setCurrentComponentId(componentId);

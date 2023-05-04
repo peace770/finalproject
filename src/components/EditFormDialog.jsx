@@ -7,10 +7,13 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { MenuItem, Select } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 export default function FormDialog({ obj, setObj }) {
   //  const [open, setOpen] = React.useState(false);
   const [tempData, setTempData] = React.useState({});
+  const navigate = useNavigate();
+
   React.useEffect(() => {
     // obj ? obj.toChange() : {}
     setTempData({});
@@ -37,7 +40,7 @@ export default function FormDialog({ obj, setObj }) {
   function handleDelete() {
     if (window.confirm("למחוק?!")) {
       obj.delete().then(() =>
-      window.location.reload());
+      navigate('/dashboard'));
     }
     handleClose();
   }
@@ -49,7 +52,6 @@ export default function FormDialog({ obj, setObj }) {
         <DialogContent>
           {Object.entries(obj.toChange()).map(
             ([key, { type, onChange, options }]) => {
-              console.log(obj);
               if (type == typeof "" || type == typeof 0)
                 return (
                   <TextField

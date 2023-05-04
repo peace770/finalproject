@@ -73,7 +73,10 @@ export function signOutUser() {
   // Sign out of Firebase.
   signOut(getAuth());
 }
-
+function getUid() {
+  const { uid } = getAuth().currentUser || {};
+  return uid || null;
+}
 // Returns true if a user is signed-in.
 export function isUserSignedIn() {
   return !!getAuth().currentUser;
@@ -83,8 +86,10 @@ async function getUserData(userId) {
   return await getDoc(q);
 }
 export async function saveLastComponent(courseId, componentId) {
-  await updateDoc(doc(db, "users", getAuth().currentUser.uid, "userCourses", courseId), {lastComponent:componentId, 
-    lessonsLearned: arrayUnion(componentId)});
+  await updateDoc(
+    doc(db, "users", getAuth().currentUser.uid, "userCourses", courseId),
+    { lastComponent: componentId, lessonsLearned: arrayUnion(componentId) }
+  );
 }
 export default function FirebaseContext({ children }) {
   const [LoginState, setLoginState] = useState(getAuth().currentUser);
@@ -99,18 +104,26 @@ export default function FirebaseContext({ children }) {
     } else setLoginState(user);
   });
 
+
   return (
     <LoginContext.Provider value={LoginState}>{children}</LoginContext.Provider>
   );
 }
 
-export async function registerToCourse(courseId, userId) {
+export  function registerToCourse(courseId, userId) {
   let data = {
     lastComponent: "",
     lessonsLearned: [],
   };
-  await setDoc(doc(db, "users", userId, "userCourses", courseId), data);
-  return true;
+  return setDoc(doc(db, "users", userId, "userCourses", courseId), data);
+}
+export function cancelCourseSubscription(courseId){
+  return deleteDoc(doc(db, "users", getUid(), "userCourses", courseId))
+}
+function filterQueryByPublishedOrCreatorOfCourse(q, creator) {
+  return (creator != null && getUid() == creator)
+        ? query(q)
+        : query(q, where("isPublished", "==", true));
 }
 
 export class Course {
@@ -127,6 +140,7 @@ export class Course {
     if (typeof creator === "string") {
       this._creator = creator;
     } else {
+      console.log(creator);
       throw new TypeError("creator must be a string");
     }
     if (typeof name === "string") {
@@ -156,7 +170,9 @@ export class Course {
   get id() {
     return this._id;
   }
-
+  get isPublished() {
+    return this._isPublished;
+  }
   get description() {
     return this._description;
   }
@@ -214,13 +230,13 @@ export class Course {
   toChange() {
     return {
       name: {
-        type: typeof '',
+        type: typeof "",
         onChange: (e) => {
           this.name = e.target.value;
         },
       },
       description: {
-        type: typeof '',
+        type: typeof "",
         onChange: (e) => {
           this.description = e.target.value;
         },
@@ -333,11 +349,18 @@ export class Course {
   }
 
   async fill() {
-    const q = query(collection(db, "courses", this._id, "chapters"));
+    const chaptersCollectionRef = collection(
+      db,
+      "courses",
+      this._id,
+      "chapters"
+    );
+
+    const q = filterQueryByPublishedOrCreatorOfCourse(chaptersCollectionRef, this.creator)
+
     const chapters = await getDocs(q);
     chapters.forEach((chapter) => {
       let { name, position, isPublished } = chapter.data();
-      console.log(chapter.data());
       this.DBaddChapter(name, chapter.id, position, isPublished);
     });
     this.chapters.sort((a, b) => a.position - b.position);
@@ -362,7 +385,7 @@ export class Course {
         snapshot.id,
         data.isPublished,
         data.tags,
-        data.description
+        data.description || ""
       );
     },
   };
@@ -370,7 +393,8 @@ export class Course {
   static async getAllCourses() {
     // return object with all the courses
     const q = query(collection(db, "courses")).withConverter(Course.Converter);
-    return getDocs(q);
+    const publishedOnly = filterQueryByPublishedOrCreatorOfCourse(q, null)
+    return getDocs(publishedOnly);
   }
 
   static async getCoursesByCreatorId(userId) {
@@ -383,6 +407,7 @@ export class Course {
     return res;
   }
   static async getUserCourses(userId) {
+    
     const q = query(collection(db, "users", userId, "userCourses"));
     let { docs } = await getDocs(q);
     let courses = docs.map(async (doc) => {
@@ -419,7 +444,7 @@ export class Course {
       creator: getAuth().currentUser.uid,
       tags: [],
       isPublished: false,
-      description: '',
+      description: "",
     };
     let doc = await addDoc(collection(db, "courses"), data);
     return new Course(
@@ -597,16 +622,17 @@ export class Chapter {
     return true;
   }
   async fill() {
-    const q = query(
-      collection(
-        db,
-        "courses",
-        this.course._id,
-        "chapters",
-        this.id,
-        "components"
-      )
+    const componentsCollectionRef = collection(
+      db,
+      "courses",
+      this.course._id,
+      "chapters",
+      this.id,
+      "components"
     );
+
+    const q = filterQueryByPublishedOrCreatorOfCourse(componentsCollectionRef, this.course.creator);
+
     let docs = await getDocs(q);
     docs.forEach((comp) => {
       let data = comp.data();

@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   Course,
   LoginContext,
+  cancelCourseSubscription,
   redirectIfUserNotSignedUp,
 } from "../components/FirebaseContext";
 import Card from "@mui/material/Card";
@@ -16,11 +17,22 @@ import Grid from "@mui/material/Grid";
 import Container from "@mui/material/Container";
 import { Link } from "react-router-dom";
 import { CANCEL_A_TAG_DEFAULT_STYLE } from "../util";
+import { getAuth, reload } from "firebase/auth";
+import DashboardCourseCard from "../components/DashboardCourseCard";
+import StandartLoadingPage from "../components/StandartLoadingPage";
 
 export default function Dashboard() {
   const user = useContext(LoginContext);
-
   const [courses, setCourses] = useState(null);
+
+  function triggerReload() {
+    setCourses(null);
+  }
+  function handleCreateCourse() {
+    Course.createNewCourse("new course").then((course) =>
+      window.location.assign(`/course/${course.id}`)
+    );
+  }
 
   if (!courses) {
     if (user.creator) {
@@ -30,14 +42,19 @@ export default function Dashboard() {
     } else {
       Course.getUserCourses(user.uid).then((result) => setCourses(result));
     }
-    return <h1>Loading</h1>;
+    return <StandartLoadingPage primary={'טוען קורסים...'}/>;
   }
-
-  console.log(courses);
+  
   return (
-    <Box py={'5vh'} px={'5vw'}>
-      <Typography variant="h4" gutterBottom={true}>My Courses</Typography>
-      {user.creator ? <Button onClick={handleCreateCourse}>create new course</Button> : <></> }
+    <Box py={"5vh"} px={"5vw"}>
+      <Typography variant="h4" gutterBottom={true}>
+        הקורסים שלי
+      </Typography>
+      {user.creator ? (
+        <Button onClick={handleCreateCourse}>צור קורס חדש</Button>
+      ) : (
+        <></>
+      )}
       {courses.length === 0 ? (
         <Box>
           {!user.creator ? (
@@ -57,45 +74,15 @@ export default function Dashboard() {
         </Box>
       ) : (
         <Box>
-          <Container sx={{marginInlineStart:'0em' }} maxWidth="sm" disableGutters>
-            <Grid container spacing={4} flexDirection={'column'}>
+          <Container
+            sx={{ marginInlineStart: "0em" }}
+            maxWidth="sm"
+            disableGutters
+          >
+            <Grid container spacing={4} flexDirection={"column"}>
               {courses.map((course, i) => (
-                <Grid item key={i} >
-                  <Card
-                    sx={{
-                      height: "150px",
-                      display: "flex",
-                      // flexDirection: "row",
-                      flexWrap: "nowrap",
-                    }}
-                  >
-                    <CardMedia
-                      component="img"
-                      sx={{
-                        height: "100%",
-                        objectFit: "contain",
-                      }}
-                      image={
-                        course.url ||
-                        "https://www.grouphealth.ca/wp-content/uploads/2018/05/placeholder-image.png"
-                      }
-                      alt="course image"
-                    />
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      <Typography gutterBottom variant="h5" component="h2">
-                        {course.name}
-                      </Typography>
-                      {/* <Typography>{course.creator}</Typography> */}
-                    </CardContent>
-                    <CardActions>
-                      <Link
-                        to={`/course/${course.id}/${course.lastComponent ||
-                          ""}`}
-                      >
-                        {user.creator ? "edit" : "view"}
-                      </Link>
-                    </CardActions>
-                  </Card>
+                <Grid item key={i}>
+                  <DashboardCourseCard course={course} isCreator={user.creator} reloadCallback={triggerReload}/>
                 </Grid>
               ))}
             </Grid>
@@ -105,6 +92,4 @@ export default function Dashboard() {
     </Box>
   );
 }
-function handleCreateCourse() {
-  Course.createNewCourse('new course').then(course => window.location.assign(`/course/${course.id}`))
-}
+

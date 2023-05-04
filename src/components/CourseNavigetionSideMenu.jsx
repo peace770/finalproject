@@ -17,7 +17,7 @@ import { CANCEL_A_TAG_DEFAULT_STYLE } from "../util";
 import { Course, LoginContext } from "./FirebaseContext";
 import EditIcon from "@mui/icons-material/Edit";
 import Button from "@mui/material/Button";
-import FormDialog from "./FormDialog";
+import EditFormDialog from "./EditFormDialog";
 import AddIcon from "@mui/icons-material/Add";
 
 export default function CourseNavigetionSideMenu({ course }) {
@@ -97,7 +97,7 @@ export default function CourseNavigetionSideMenu({ course }) {
           componentAddOn={componentAddOn}
         />
       ))}
-      <FormDialog obj={objectToChange} setObj={setObjectToChange} />
+      <EditFormDialog obj={objectToChange} setObj={setObjectToChange} />
     </List>
   );
 }
