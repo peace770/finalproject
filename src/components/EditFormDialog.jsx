@@ -9,11 +9,13 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { MenuItem, Select } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-export default function FormDialog({ obj, setObj }) {
+export default function FormDialog({ obj, setObj, reloader }) {
   //  const [open, setOpen] = React.useState(false);
   const [tempData, setTempData] = React.useState({});
   const navigate = useNavigate();
-
+  function reloadPage() {
+    reloader ? reloader() : navigate('./');
+  }
   React.useEffect(() => {
     // obj ? obj.toChange() : {}
     setTempData({});
@@ -33,14 +35,13 @@ export default function FormDialog({ obj, setObj }) {
   function handleSave() {
     console.log("saving");
     console.log(obj);
-    obj.saveChanges(tempData).then(() =>
-    window.location.reload());
+    obj.saveChanges(tempData).then(reloadPage);
     handleClose();
   }
   function handleDelete() {
     if (window.confirm("למחוק?!")) {
       obj.delete().then(() =>
-      navigate('/dashboard'));
+      reloadPage());
     }
     handleClose();
   }

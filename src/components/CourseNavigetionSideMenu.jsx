@@ -10,6 +10,7 @@ import {
   Typography,
   Box,
   Container,
+  Snackbar,
 } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { Link } from "react-router-dom";
@@ -20,17 +21,24 @@ import Button from "@mui/material/Button";
 import EditFormDialog from "./EditFormDialog";
 import AddIcon from "@mui/icons-material/Add";
 
-export default function CourseNavigetionSideMenu({ course }) {
+export default function CourseNavigetionSideMenu({ course, reloader }) {
   const user = React.useContext(LoginContext);
   const [lessonsLearned, setLessonsLearned] = useState(null);
   const [objectToChange, setObjectToChange] = useState(null);
+  const [snackbarMassage, setSnackbarMassage] = useState('');
 
   if (lessonsLearned === null && !user.creator) {
     Course.getUserCourseData(user.uid, course.id).then((doc) =>
       setLessonsLearned(doc.data().lessonsLearned)
     );
   }
+  const handleSnackbarClose = (event, reason) => {
+    // if (reason === 'clickaway') {
+    //   return;
+    // }
 
+    setSnackbarMassage('');
+  };
   function editChapter(chapter) {
     console.log(chapter.name);
     setObjectToChange(chapter);
@@ -50,7 +58,7 @@ export default function CourseNavigetionSideMenu({ course }) {
             startIcon={<EditIcon />}
             onClick={() => editChapter(chapter)}
           ></Button>
-          <Button onClick={() => chapter.new()}>
+          <Button onClick={() => chapter.new().then(() => reloader())}>
             <AddIcon />
           </Button>
         </>
@@ -97,7 +105,13 @@ export default function CourseNavigetionSideMenu({ course }) {
           componentAddOn={componentAddOn}
         />
       ))}
-      <EditFormDialog obj={objectToChange} setObj={setObjectToChange} />
+      <EditFormDialog obj={objectToChange} setObj={setObjectToChange} reloader={reloader} setStatusMassage={setSnackbarMassage} />
+      <Snackbar
+        open={snackbarMassage != ''}
+        autoHideDuration={2000}
+        onClose={handleSnackbarClose}
+        message={snackbarMassage}
+      />
     </List>
   );
 }

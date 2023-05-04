@@ -10,6 +10,7 @@ import {
   saveLastComponent,
 } from "../components/FirebaseContext";
 import ContentFactory from "../components/Personal/ContentFactory";
+import StandartLoadingPage from "../components/StandartLoadingPage";
 
 export default function Course() {
   const user = React.useContext(LoginContext);
@@ -48,11 +49,14 @@ export default function Course() {
   if (!course || courseId != course.id) {
     CourseClass.buildCourse(courseId).then((data) => setCourse(data))
     .catch(() => navigate('/404'));
-    return <h1>טוען קורס</h1>;
+    return <StandartLoadingPage primary='טוען קורס...' />;
   }
 
   if (componentId != currentComponentId) setCurrentComponentId(componentId);
-
+  
+  function reloader(){
+    setCourse(null);
+  }
   function handleNext() {
     let next = getNextComponent(currentComponent);
     if (next) {
@@ -75,7 +79,7 @@ export default function Course() {
         </Typography>
       </Grid>
       <Grid item xs={3} sm={3} >
-        <CourseNavigetionSideMenu course={course} lessonsLearned={[]} />
+        <CourseNavigetionSideMenu course={course} lessonsLearned={[]} reloader={reloader} />
       </Grid>{" "}
       <Grid item mx={'auto'} xs={12} sm={9}>
         {currentComponent ? (
