@@ -1,12 +1,13 @@
 import { Box } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import Editable from "../Editable";
+import { FirebaseConfig } from "../../FirebaseConfig";
 
 export default function VideoContent({ videoId , frameId = `${Math.random()}`}) {
   const [videoIdState, setVideoIdState] = useState(videoId);
   const [videoFrame, setvideoFrame] = useState('<div id="pppppppppp"></div>');
 
-  let key = "AIzaSyACfe4ntiPnLXFTvUkNbnH2fpv47Br_-ig";
+  let key = FirebaseConfig.apiKey;
 
   function resizeIframe() {
     //let arr = document.getElementById(frameId).getElementById("iframe");

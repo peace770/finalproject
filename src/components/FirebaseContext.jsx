@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useState } from "react";
-import getFirebaseConfig from "../FirebaseConfig";
+import { FirebaseConfig } from "../FirebaseConfig";
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
@@ -30,8 +30,8 @@ const urlRegex = /^(?:(?:https?|ftp):\/\/)?(?:\S+(?::\S*)?@)?(?:\d{1,3}\.\d{1,3}
 
 export const LoginContext = createContext();
 
-const firebaseAppConfig = getFirebaseConfig();
-const app = initializeApp(firebaseAppConfig);
+
+const app = initializeApp(FirebaseConfig);
 
 const db = getFirestore(app);
 
