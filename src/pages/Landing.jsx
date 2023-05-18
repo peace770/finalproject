@@ -36,20 +36,26 @@ export default function Landing() {
         }
     }, [courseId, userId]);
     
-    const handleClick = (()=>{
-      var res = registerToCourse(courseId, userId)
-      .catch((error)=>{
-        alert("Houston ... we've had a problem here");
-        console.log(error);
-      });
-      if (res === true){
-        setAlreadyIn(true);
-        Course.getUserCourseData(courseId, userId).then(data => setUserCourseData(data.data()));
-      }
-      if (userCourseData){
-        console.log(userCourseData);
-      }
-    })
+
+    const handleClick = () => {
+      registerToCourse(courseId, userId)
+        .then(() => {
+          setAlreadyIn(true);
+          Course.getUserCourseData(courseId, userId)
+            .then(data => {
+              setUserCourseData(data.data());
+              console.log(userCourseData);
+            })
+            .catch(error => {
+              console.log(error, "getting User Course Data");
+            });
+        })
+        .catch(error => {
+          alert("Houston... we've had a problem here");
+          console.log(error);
+        });
+    };
+    
     
     const buttonText = alreadyIn ? `רשום לקורס`:`הרשם לקורס`;
   
