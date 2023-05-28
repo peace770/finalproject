@@ -1,6 +1,6 @@
 import React from 'react';
 import Common from './components/common';
-import './css/app.css';
+
 import Homepage from './pages/homepage';
 import FirebaseContext, { isUserSignedIn } from "./components/FirebaseContext";
 import StickyFooter from './components/Personal/StickyFooter';
