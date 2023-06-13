@@ -409,7 +409,9 @@ export class Course {
   static async getUserCourses(userId) {
     
     const q = query(collection(db, "users", userId, "userCourses"));
-    let { docs } = await getDocs(q);
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) return [];
+    let { docs } = querySnapshot;
     let courses = docs.map(async (doc) => {
       let course = await this.getCourse(doc.id);
       return Object.assign(course.data(), doc.data());
