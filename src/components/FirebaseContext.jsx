@@ -407,7 +407,7 @@ export class Course {
     return res;
   }
   static async getUserCourses(userId) {
-    
+    try {
     const q = query(collection(db, "users", userId, "userCourses"));
     const querySnapshot = await getDocs(q);
     if (querySnapshot.empty) return [];
@@ -417,7 +417,11 @@ export class Course {
       return Object.assign(course.data(), doc.data());
     });
     let result = await Promise.all(courses);
-    return result;
+    return result;}
+    catch (err) {
+      console.log('catched error: \n', err);
+      return [];
+    }
   }
 
   static async getUserCourseData(userId, courseId) {

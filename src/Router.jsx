@@ -36,7 +36,9 @@ export default function Router() {
         element={
           <React.Fragment>
             <AppAppBar />
-            <Outlet />
+            <div style={{ flexGrow: 1 }}>
+              <Outlet />
+            </div>
             <AppFooter />
           </React.Fragment>
         }
