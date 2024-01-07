@@ -7,7 +7,6 @@ import {
   Course,
   LoginContext,
   cancelCourseSubscription,
-  redirectIfUserNotSignedUp,
 } from "../components/FirebaseContext";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";

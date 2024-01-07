@@ -26,10 +26,10 @@ import {
   arrayUnion,
 } from "firebase/firestore";
 
-const urlRegex = /^(?:(?:https?|ftp):\/\/)?(?:\S+(?::\S*)?@)?(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|(?:[a-z0-9-]+\.)+[a-z]{2,})(?::\d{2,5})?(?:\/\S*)?$/i;
-
+const urlRegex =
+  /^(?:(?:https?|ftp):\/\/)?(?:\S+(?::\S*)?@)?(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|(?:[a-z0-9-]+\.)+[a-z]{2,})(?::\d{2,5})?(?:\/\S*)?$/i;
+var _user = null;
 export const LoginContext = createContext();
-
 
 const app = initializeApp(FirebaseConfig);
 
@@ -92,38 +92,38 @@ export async function saveLastComponent(courseId, componentId) {
   );
 }
 export default function FirebaseContext({ children }) {
-  const [LoginState, setLoginState] = useState(getAuth().currentUser);
-  onAuthStateChanged(getAuth(), (user) => {
-    if (user) {
-      getUserData(user.uid).then((data) => {
-        let ndata = Object.assign(user, data.data());
-        // console.log('old: ', data.data());
-        // console.log('nw: ', ndata);
-        setLoginState(ndata);
-      });
-    } else setLoginState(user);
-  });
-
+  const [loginState, setLoginState] = useState(getAuth().currentUser);
+  useEffect(() => {
+    _user = loginState;
+    onAuthStateChanged(getAuth(), (user) => {
+      if (user) {
+        getUserData(user.uid).then((doc) => {
+          Object.assign(user, doc.data());
+          setLoginState(user);
+        });
+      } else setLoginState(user);
+    }); 
+  }, [loginState]);
 
   return (
-    <LoginContext.Provider value={LoginState}>{children}</LoginContext.Provider>
+    <LoginContext.Provider value={loginState}>{children}</LoginContext.Provider>
   );
 }
 
-export  function registerToCourse(courseId, userId) {
+export function registerToCourse(courseId, userId) {
   let data = {
     lastComponent: "",
     lessonsLearned: [],
   };
   return setDoc(doc(db, "users", userId, "userCourses", courseId), data);
 }
-export function cancelCourseSubscription(courseId){
-  return deleteDoc(doc(db, "users", getUid(), "userCourses", courseId))
+export function cancelCourseSubscription(courseId) {
+  return deleteDoc(doc(db, "users", getUid(), "userCourses", courseId));
 }
 function filterQueryByPublishedOrCreatorOfCourse(q, creator) {
-  return (creator != null && getUid() == creator)
-        ? query(q)
-        : query(q, where("isPublished", "==", true));
+  return _user.admin || (creator != null && getUid() == creator)
+    ? query(q)
+    : query(q, where("isPublished", "==", true));
 }
 
 export class Course {
@@ -356,7 +356,10 @@ export class Course {
       "chapters"
     );
 
-    const q = filterQueryByPublishedOrCreatorOfCourse(chaptersCollectionRef, this.creator)
+    const q = filterQueryByPublishedOrCreatorOfCourse(
+      chaptersCollectionRef,
+      this.creator
+    );
 
     const chapters = await getDocs(q);
     chapters.forEach((chapter) => {
@@ -393,10 +396,14 @@ export class Course {
   static async getAllCourses() {
     // return object with all the courses
     const q = query(collection(db, "courses")).withConverter(Course.Converter);
-    const publishedOnly = filterQueryByPublishedOrCreatorOfCourse(q, null)
+    const publishedOnly = filterQueryByPublishedOrCreatorOfCourse(q, null);
     return getDocs(publishedOnly);
   }
-
+  static async __adminGetAllCourses() {
+    // return object with all the courses
+    const q = query(collection(db, "courses")).withConverter(Course.Converter);
+    return getDocs(q);
+  }
   static async getCoursesByCreatorId(userId) {
     // return object with all the courses
     const q = query(
@@ -408,18 +415,18 @@ export class Course {
   }
   static async getUserCourses(userId) {
     try {
-    const q = query(collection(db, "users", userId, "userCourses"));
-    const querySnapshot = await getDocs(q);
-    if (querySnapshot.empty) return [];
-    let { docs } = querySnapshot;
-    let courses = docs.map(async (doc) => {
-      let course = await this.getCourse(doc.id);
-      return Object.assign(course.data(), doc.data());
-    });
-    let result = await Promise.all(courses);
-    return result;}
-    catch (err) {
-      console.log('catched error: \n', err);
+      const q = query(collection(db, "users", userId, "userCourses"));
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) return [];
+      let { docs } = querySnapshot;
+      let courses = docs.map(async (doc) => {
+        let course = await this.getCourse(doc.id);
+        return Object.assign(course.data(), doc.data());
+      });
+      let result = await Promise.all(courses);
+      return result;
+    } catch (err) {
+      console.log("catched error: \n", err);
       return [];
     }
   }
@@ -637,7 +644,10 @@ export class Chapter {
       "components"
     );
 
-    const q = filterQueryByPublishedOrCreatorOfCourse(componentsCollectionRef, this.course.creator);
+    const q = filterQueryByPublishedOrCreatorOfCourse(
+      componentsCollectionRef,
+      this.course.creator
+    );
 
     let docs = await getDocs(q);
     docs.forEach((comp) => {

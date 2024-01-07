@@ -6,11 +6,7 @@ import SignUp from "./mui material-ui master docs-src_pages_premium-themes_onepi
 import Dashboard from "./pages/Dashboard";
 import Terms from "./mui material-ui master docs-src_pages_premium-themes_onepirate/Terms";
 import Privacy from "./mui material-ui master docs-src_pages_premium-themes_onepirate/Privacy";
-import {
-  LoginContext,
-  redirectIfUserIsSignedIn,
-  redirectIfUserNotSignedUp,
-} from "./components/FirebaseContext";
+import { LoginContext } from "./components/FirebaseContext";
 import NotFound404 from "./pages/NotFound404";
 import Course from "./pages/Course";
 import AppAppBar from "./mui material-ui master docs-src_pages_premium-themes_onepirate/modules/views/AppAppBar";
@@ -19,6 +15,10 @@ import SignedOnly from "./components/SignedOnly";
 import NotSignedOnly from "./components/NotSignedOnly";
 import Landing from "./pages/Landing";
 import AppFooter from "./mui material-ui master docs-src_pages_premium-themes_onepirate/modules/views/AppFooter";
+import Admin from "./pages/Admin";
+import AdminOnly from "./components/AdminOnly";
+import About from "./pages/About";
+import ContactUs from "./pages/ContactUs";
 
 export default function Router() {
   const user = useContext(LoginContext);
@@ -44,7 +44,8 @@ export default function Router() {
         }
       >
         <Route path="/" element={<Home />} />
-        <Route path="/about" element={<h2>About</h2>} />
+        <Route path="/about" element={<About/>} />
+        <Route path="/contactus" element={<ContactUs/>} />
         <Route path="/*" element={<NotFound404 />} />
 
         <Route path="/landing/:courseId" element={<Landing />} />
@@ -57,9 +58,12 @@ export default function Router() {
         </Route>
 
         <Route element={<SignedOnly />}>
-          <Route path="/dashboard" element={user ? <Dashboard /> : <></>} />
+          <Route path="/dashboard" element={user ? <Dashboard /> : console.log('------------------------') + "  888888888"} />
           <Route path="/course/:courseId/:componentId?" element={<Course />} />
           <Route path="/logout" element={<Logout />} />
+          <Route element={<AdminOnly />}>
+            <Route path="/admin" element={<Admin />} />
+          </Route>
         </Route>
       </Route>
     </Routes>
