@@ -93,6 +93,7 @@ export async function saveLastComponent(courseId, componentId) {
 }
 export default function FirebaseContext({ children }) {
   const [loginState, setLoginState] = useState(getAuth().currentUser);
+
   useEffect(() => {
     _user = loginState;
     onAuthStateChanged(getAuth(), (user) => {
@@ -121,7 +122,7 @@ export function cancelCourseSubscription(courseId) {
   return deleteDoc(doc(db, "users", getUid(), "userCourses", courseId));
 }
 function filterQueryByPublishedOrCreatorOfCourse(q, creator) {
-  return _user.admin || (creator != null && getUid() == creator)
+  return _user?.admin || (creator != null && getUid() == creator)
     ? query(q)
     : query(q, where("isPublished", "==", true));
 }

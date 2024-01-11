@@ -1,43 +1,42 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Grid, Box, Button, Icon } from "@mui/material";
 import { CANCEL_A_TAG_DEFAULT_STYLE } from "../util.jsx";
 import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   getFirestore,
   updateDoc,
 } from "firebase/firestore";
-import { Settings } from "@mui/icons-material";
+import { ReceiptRounded, Settings } from "@mui/icons-material";
+import { adminStore } from "./AdminDataManager.jsx";
 
-export default function AdminCourseActions({ course, setCourse }) {
-  if (!course) return;
+export default function AdminCourseActions() {
+  let admin = useContext(adminStore),
+    course = admin.currentCourseEdit;
   let [isDeleting, setIsDeleting] = useState(false);
+    if (!course) return;
 
-  function handlePublish() {
-    unpublishCourse(course)
-      .then(setCourse)
-      .catch((err) => console.error(err) + alert("changes not saved!"));
+  let handleDelete = createDeleteHandler(setIsDeleting);
+  let handlePublish = createUnpublishHandler(course, (course) =>
+    admin.set("currentCourseEdit", course)
+  );
+
+  function handleBlock() {
+    blockUser(course.creator).then((userData) => {
+      let newList = admin.creators.map((user) =>
+        user.id == course.creator ? { ...user, ...userData } : user
+      );
+      admin.set("creators", newList);
+    });
+
   }
-  function handleDelete() {
-    if (
-      confirm(
-        "This action is irreversible! Are you sure you want to continue?"
-      ) &&
-      confirm("are you realy shore?!")
-    ) {
-      setIsDeleting(true);
-      deleteCourse(course)
-        .then(() =>
-          confirm("reload data?") ? (window.location.href += "") : ""
-        )
-        .catch((err) => console.error(err) + alert("changes not saved!"))
-        .finally(() => setIsDeleting(false));
-    }
-  }
+  let creatorData = admin?.creators?.find(user => user.id == course.creator)
+console.log(creatorData);
   return !isDeleting ? (
-    <div>
+    <div id="act">
       <h3>פעולות</h3>
       <div style={{ display: "flex", flexDirection: "column", gap: "1em" }}>
         <Button>
@@ -53,6 +52,8 @@ export default function AdminCourseActions({ course, setCourse }) {
           {course.isPublished ? "unpublish" : "publish"}
         </Button>
         <Button onClick={handleDelete}>{"delete"}</Button>
+        <Button onClick={handleBlock}>{creatorData?.isBlocked ? 'unBlock' : 'block'} creator</Button>
+
       </div>
     </div>
   ) : (
@@ -63,6 +64,31 @@ export default function AdminCourseActions({ course, setCourse }) {
       </Icon>
     </Box>
   );
+}
+function createDeleteHandler(setIsDeleting = () => undefined) {
+  return function handleDelete() {
+    if (
+      confirm(
+        "This action is irreversible! Are you sure you want to continue?"
+      ) &&
+      confirm("are you realy shore?!")
+    ) {
+      setIsDeleting(true);
+      deleteCourse(course)
+        .then(() =>
+          confirm("reload data?") ? (window.location.href += "") : ""
+        )
+        .catch((err) => console.error(err) + alert("changes not saved!"))
+        .finally(() => setIsDeleting(false));
+    }
+  };
+}
+function createUnpublishHandler(course, setCourse) {
+  return function handlePublish() {
+    unpublishCourse(course)
+      .then(setCourse)
+      .catch((err) => console.error(err) + alert("changes not saved!"));
+  };
 }
 async function unpublishCourse(course) {
   let docRef = doc(getFirestore(), "courses", course.id);
@@ -109,4 +135,11 @@ async function deleteAllComponents(courseId, chapterId) {
     await deleteDoc(componentRef);
   }
   return true;
+}
+async function blockUser(uid) {
+  let userRef = doc(getFirestore(), "users", uid);
+  let userSnapshot = await getDoc(userRef);
+  let userData = userSnapshot.data();
+  let update = await updateDoc(userRef, { isBlocked: !userData.isBlocked });
+  return {isBlocked: !userData.isBlocked};
 }

@@ -1,19 +1,22 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Box, Button, Container, Grid, Typography } from "@mui/material";
 import AdminCoursesList from "../components/AdminCoursesList";
 import AdminCourseEdit from "../components/AdminCourseEdit";
+import Provider, { adminStore } from "../components/AdminDataManager";
 
-export default function Admin() {
-  let [currentCourseEdit, setCurrentCourseEdit] = useState(null);
+ function Admin() {
+
+  let store = useContext(adminStore);
 
   return (
     <Container sx={{ display: "flex" }}>
       <Box>
-        <AdminCoursesList course={currentCourseEdit} setCourse={setCurrentCourseEdit} />
+        <AdminCoursesList  />
       </Box>
       <Box>
-        <AdminCourseEdit course={currentCourseEdit} setCourse={setCurrentCourseEdit}/>
+        <AdminCourseEdit />
       </Box>
     </Container>
   );
 }
+export default () => <Provider><Admin/></Provider>

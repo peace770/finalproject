@@ -1,9 +1,12 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Grid, Box, Button } from "@mui/material";
 import AdminCourseActions from "./AdminCourseActions";
 import { getAuth } from "firebase/auth";
+import { adminStore } from "./AdminDataManager";
 
-export default function AdminCourseEdit({ course, setCourse }) {
+export default function AdminCourseEdit() {
+  let course = useContext(adminStore).currentCourseEdit;
+
   return (
     <div>
       <h1>קורס נבחר: {course ? course.name : ""}</h1>
@@ -13,7 +16,7 @@ export default function AdminCourseEdit({ course, setCourse }) {
           <p>{course?.description}</p>
         </Grid>
         <Grid item xs={4}>
-          <AdminCourseActions course={course} setCourse={setCourse} />
+          <AdminCourseActions  />
         </Grid>
       </Grid>
     </div>
