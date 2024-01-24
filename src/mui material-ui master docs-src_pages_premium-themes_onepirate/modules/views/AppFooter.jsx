@@ -46,14 +46,28 @@ const LANGUAGES = [
 ];
 
 export default function AppFooter() {
+  const [dailyPage, setDailyPage] = React.useState(null)
+  React.useEffect(() => {
+    fetch(
+      `https://www.sefaria.org/api/calendars`
+    )
+      .then((data) => data.json())
+      .then((data) => {
+        var dailypages = data.calendar_items
+        var mutatedData ={date : data.date, heberwDate: dailypages[12].displayValue.he, lessonsArray: [dailypages[0], dailypages[12],dailypages[5],dailypages[6],dailypages[2],dailypages[13]]}
+        console.log(mutatedData);
+        setDailyPage(mutatedData)
+      });
+  }, []);
+
   return (
     <Typography
       component="footer"
       sx={{ display: "flex", bgcolor: "secondary.light" }}
     >
       <Container sx={{ my: 8, display: "flex" }}>
-        <Grid container spacing={5}>
-          <Grid item xs={6} sm={4} md={3}>
+        <Grid container spacing={4}>
+          <Grid item xs={6} sm={4} md={2}>
             <Grid
               container
               direction="column"
@@ -82,7 +96,7 @@ export default function AppFooter() {
               </Grid>
             </Grid>
           </Grid>
-          <Grid item xs={6} sm={4} md={2}>
+          <Grid item xs={6} sm={4} md={1}>
             <Typography variant="h6" marked="left" gutterBottom>
               Legal
             </Typography>
@@ -104,7 +118,19 @@ export default function AppFooter() {
               Contact Us
             </Linker>
           </Grid>
-          <Grid item xs={6} sm={8} md={4}>
+          <Grid item xs={6} sm={8} md={7}>
+          {dailyPage?<Grid item xs={6} sm={8} md={7}>
+            <Typography variant="h6" marked="left" gutterBottom>
+              {`שיעורים יומים לתאריך ${dailyPage.date} ${dailyPage.heberwDate}`}
+            </Typography>
+            {dailyPage.lessonsArray.map((item, i)=>{
+              return(
+              <Typography key={i} component="a" href={`https://www.sefaria.org/${item.url}`} style={{ textDecoration: 'none', color: 'black', display: 'block'}}>
+              {`${item.title.he} : ${item.displayValue.he}`}
+              </Typography>)
+            })}
+          </Grid> : <Grid item xs={6} sm={8} md={4}></Grid>}
+
             {/* <Typography variant="h6" marked="left" gutterBottom>
               Language
             </Typography>
