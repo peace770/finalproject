@@ -54,7 +54,20 @@ export default function AppFooter() {
       .then((data) => data.json())
       .then((data) => {
         var dailypages = data.calendar_items
-        var mutatedData ={date : data.date, heberwDate: dailypages[12].displayValue.he, lessonsArray: [dailypages[0], dailypages[12],dailypages[5],dailypages[6],dailypages[2],dailypages[13]]}
+        var mutatedData = {
+          date: data.date,
+          heberwDate: "",
+          lessonsArray: [],
+        };
+        const wantedPages = ["פרשת השבוע", "דף יומי",  "הרמב\"ם היומי", "הרמב\"ם היומי (3 פרקים)", "תניא יומי", "ירושלמי יומי"]
+        dailypages.forEach(page => {
+          if (wantedPages.includes(page.title.he)){
+            mutatedData.lessonsArray.push(page)
+            if(page.title.he == "תניא יומי"){
+              mutatedData.heberwDate = page.displayValue.he
+            }
+          }
+        });
         console.log(mutatedData);
         setDailyPage(mutatedData)
       });
@@ -125,7 +138,7 @@ export default function AppFooter() {
             </Typography>
             {dailyPage.lessonsArray.map((item, i)=>{
               return(
-              <Typography key={i} component="a" href={`https://www.sefaria.org/${item.url}`} style={{ textDecoration: 'none', color: 'black', display: 'block'}}>
+              <Typography key={i} component="a" target="_blank" href={`https://www.sefaria.org/${item.url}`} style={{ textDecoration: 'none', color: 'black', display: 'block'}}>
               {`${item.title.he} : ${item.displayValue.he}`}
               </Typography>)
             })}
@@ -157,6 +170,7 @@ export default function AppFooter() {
                 href="https://mui.com/material-ui/material-icons/"
                 rel="open source"
                 title="MUI icons"
+                target="_blank"
               >
                 MUI
               </Link>
